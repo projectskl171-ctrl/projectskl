@@ -24,44 +24,82 @@
             </div>
 
             <!-- NAV -->
-            <nav class="flex-1 overflow-y-auto px-3 py-4">
+            <nav class="flex-1 overflow-y-auto py-4">
                 <template v-for="group in navGroups" :key="group.label">
-                    <p class="mt-1 mb-2 px-3 text-[10px] font-bold tracking-[0.14em] text-white/30 uppercase">
+                    <p class="mt-1 mb-2 px-5 text-[10px] font-bold tracking-[0.14em] text-white/30 uppercase">
                         {{ group.label }}
                     </p>
-                    <div class="mb-4 space-y-0.5">
+                    <div class="mb-4 space-y-0">
                         <Link
                             v-for="item in group.items"
                             :key="item.href"
                             :href="item.href"
-                            class="group relative flex h-9 w-full items-center gap-3 overflow-hidden rounded-lg px-3 text-[13px] font-medium transition-colors duration-150"
+                            class="group relative flex h-9 w-full items-center gap-3 overflow-hidden px-5 text-[13px] font-medium transition-colors duration-150 ease-in"
                             :class="
                                 isActive(item.href)
                                     ? 'text-white'
                                     : 'text-white/55 hover:text-white'
                             "
                         >
-                            <!-- active bg -->
+                            <!-- ===== ACTIVE BG : colorful + particle infinite ===== -->
                             <span
-                                v-if="isActive(item.href)"
-                                class="pointer-events-none absolute inset-0 rounded-lg"
-                                :style="{ background: hexA(item.color, 0.14) }"
-                            />
-                            <!-- hover slide bg -->
+                                class="pointer-events-none absolute inset-0 overflow-hidden transition-opacity duration-300 ease-in"
+                                :class="isActive(item.href) ? 'opacity-100' : 'opacity-0'"
+                                aria-hidden="true"
+                            >
+                                <!-- base gradient (core color tetap dominan) -->
+                                <span
+                                    class="absolute inset-0"
+                                    :style="{
+                                        background: `linear-gradient(90deg, ${hexA(item.color, 0.28)}, ${hexA(item.color, 0.12)} 55%, ${hexA(item.color, 0.03)})`,
+                                    }"
+                                />
+                                <!-- particle dots : drift infinite -->
+                                <span
+                                    class="nav-particles absolute inset-0"
+                                    :style="{ '--c': item.color }"
+                                />
+                                <!-- floating orbs : perpaduan indah -->
+                                <span
+                                    class="nav-orb absolute -top-4 left-8 h-10 w-10 rounded-full blur-md"
+                                    :style="{ background: hexA(item.color, 0.5) }"
+                                />
+                                <span
+                                    class="nav-orb-2 absolute -bottom-5 left-24 h-12 w-12 rounded-full blur-lg"
+                                    :style="{ background: `linear-gradient(135deg, ${hexA(item.color, 0.45)}, ${hexA('#ffffff', 0.12)})` }"
+                                />
+                                <!-- shine sweep infinite -->
+                                <span class="nav-shine absolute inset-y-0 w-16" />
+                                <!-- bottom glow line -->
+                                <span
+                                    class="absolute inset-x-0 bottom-0 h-px"
+                                    :style="{ background: `linear-gradient(90deg, transparent, ${hexA(item.color, 0.7)}, transparent)` }"
+                                />
+                            </span>
+                            <!-- ===== HOVER BG (inactive) : colorful pucat ===== -->
                             <span
-                                v-else
-                                class="pointer-events-none absolute inset-0 origin-left scale-x-0 rounded-lg transition-transform duration-500 ease-[cubic-bezier(0.4,0,1,1)] group-hover:scale-x-100"
-                                :style="{ background: hexA(item.color, 0.09) }"
-                            />
-                            <!-- left accent bar (active) -->
+                                v-if="!isActive(item.href)"
+                                class="pointer-events-none absolute inset-0 origin-left scale-x-0 overflow-hidden transition-transform duration-300 ease-in-out group-hover:scale-x-100"
+                                :style="{
+                                    background: `linear-gradient(90deg, ${hexA(item.color, 0.16)}, ${hexA(item.color, 0.04)})`,
+                                }"
+                                aria-hidden="true"
+                            >
+                                <span
+                                    class="nav-particles nav-particles-soft absolute inset-0"
+                                    :style="{ '--c': item.color }"
+                                />
+                            </span>
+                            <!-- ===== RIGHT accent bar : selalu di DOM biar animasi, tidak flick ===== -->
                             <span
-                                v-if="isActive(item.href)"
-                                class="pointer-events-none absolute top-1/2 left-0 h-5 w-[3px] -translate-y-1/2 rounded-r-full"
+                                class="pointer-events-none absolute top-1/2 right-0 h-5 w-[3px] -translate-y-1/2 rounded-l-full transition-all duration-300 ease-in"
+                                :class="isActive(item.href) ? 'nav-bar-on scale-y-100 opacity-100' : 'scale-y-50 opacity-0'"
                                 :style="{ background: item.color, boxShadow: `0 0 12px ${hexA(item.color, 0.6)}` }"
+                                aria-hidden="true"
                             />
                             <component
                                 :is="item.icon"
-                                class="relative z-10 h-[17px] w-[17px] shrink-0 transition-colors duration-200"
+                                class="relative z-10 h-[17px] w-[17px] shrink-0 transition-colors duration-150 ease-in"
                                 :style="isActive(item.href) ? { color: item.color } : {}"
                             />
                             <span class="relative z-10 flex-1 truncate">{{ item.label }}</span>
@@ -77,20 +115,28 @@
             </nav>
 
             <!-- FOOTER ACTIONS -->
-            <div class="shrink-0 space-y-0.5 border-t border-white/[0.06] p-3">
+            <div class="shrink-0 space-y-0 border-t border-white/[0.06] py-3">
                 <Link
                     v-for="item in footerItems"
                     :key="item.href"
                     :href="item.href"
-                    class="group relative flex h-9 w-full items-center gap-3 overflow-hidden rounded-lg px-3 text-[13px] font-medium text-white/55 transition-colors duration-150 hover:text-white"
+                    class="group relative flex h-9 w-full items-center gap-3 overflow-hidden px-5 text-[13px] font-medium text-white/55 transition-colors duration-150 ease-in hover:text-white"
                 >
                     <span
-                        class="pointer-events-none absolute inset-0 origin-left scale-x-0 rounded-lg transition-transform duration-500 ease-[cubic-bezier(0.4,0,1,1)] group-hover:scale-x-100"
-                        :style="{ background: hexA(item.color, 0.09) }"
-                    />
+                        class="pointer-events-none absolute inset-0 origin-left scale-x-0 overflow-hidden transition-transform duration-300 ease-in group-hover:scale-x-100"
+                        :style="{
+                            background: `linear-gradient(90deg, ${hexA(item.color, 0.16)}, ${hexA(item.color, 0.04)})`,
+                        }"
+                        aria-hidden="true"
+                    >
+                        <span
+                            class="nav-particles nav-particles-soft absolute inset-0"
+                            :style="{ '--c': item.color }"
+                        />
+                    </span>
                     <component
                         :is="item.icon"
-                        class="relative z-10 h-[17px] w-[17px] shrink-0 transition-colors duration-200 group-hover:text-[color:var(--c)]"
+                        class="relative z-10 h-[17px] w-[17px] shrink-0 transition-colors duration-150 ease-in group-hover:text-[color:var(--c)]"
                         :style="{ '--c': item.color }"
                     />
                     <span class="relative z-10 flex-1 truncate">{{ item.label }}</span>
@@ -322,3 +368,130 @@ const hexA = (hex, alpha) => {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 </script>
+
+<style scoped>
+/* ============ PARTICLE DOTS : drift infinite ============ */
+.nav-particles {
+    opacity: 0.7;
+    background-image:
+        radial-gradient(circle, var(--c) 1px, transparent 1.6px),
+        radial-gradient(circle, rgba(255, 255, 255, 0.9) 0.7px, transparent 1.2px);
+    background-size:
+        18px 18px,
+        26px 26px;
+    background-position:
+        0 0,
+        13px 7px;
+    animation: particle-drift 9s linear infinite;
+    mask-image: linear-gradient(90deg, black 20%, transparent 95%);
+    -webkit-mask-image: linear-gradient(90deg, black 20%, transparent 95%);
+}
+.nav-particles-soft {
+    opacity: 0.45;
+}
+@keyframes particle-drift {
+    from {
+        background-position:
+            0 0,
+            13px 7px;
+    }
+    to {
+        background-position:
+            36px 18px,
+            -13px -7px;
+    }
+}
+
+/* ============ FLOATING ORBS ============ */
+.nav-orb {
+    animation: orb-float 5s ease-in-out infinite alternate;
+}
+.nav-orb-2 {
+    animation: orb-float-2 7s ease-in-out infinite alternate;
+}
+@keyframes orb-float {
+    from {
+        transform: translate(0, 0) scale(1);
+        opacity: 0.9;
+    }
+    to {
+        transform: translate(14px, 6px) scale(1.25);
+        opacity: 0.5;
+    }
+}
+@keyframes orb-float-2 {
+    from {
+        transform: translate(0, 0) scale(1.1);
+        opacity: 0.7;
+    }
+    to {
+        transform: translate(-12px, -5px) scale(0.9);
+        opacity: 0.4;
+    }
+}
+
+/* ============ SHINE SWEEP ============ */
+.nav-shine {
+    background: linear-gradient(
+        100deg,
+        transparent 20%,
+        rgba(255, 255, 255, 0.22) 50%,
+        transparent 80%
+    );
+    filter: blur(1px);
+    animation: shine-sweep 3.8s ease-in infinite;
+}
+@keyframes shine-sweep {
+    0% {
+        left: -30%;
+        opacity: 0;
+    }
+    15% {
+        opacity: 1;
+    }
+    60% {
+        left: 110%;
+        opacity: 1;
+    }
+    100% {
+        left: 110%;
+        opacity: 0;
+    }
+}
+
+/* ============ SELECTED BAR : masuk halus + glow pulse, tidak flick ============ */
+.nav-bar-on {
+    animation:
+        bar-in 0.32s ease-in,
+        bar-glow 2.4s ease-in-out 0.32s infinite;
+}
+@keyframes bar-in {
+    from {
+        transform: translateY(-50%) scaleY(0.2);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(-50%) scaleY(1);
+        opacity: 1;
+    }
+}
+@keyframes bar-glow {
+    0%,
+    100% {
+        filter: brightness(1);
+    }
+    50% {
+        filter: brightness(1.5);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nav-particles,
+    .nav-orb,
+    .nav-orb-2,
+    .nav-shine,
+    .nav-bar-on {
+        animation: none;
+    }
+}
+</style>
