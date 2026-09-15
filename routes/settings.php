@@ -6,7 +6,11 @@ use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function () {
-    Route::redirect('settings', '/settings/profile');
+    // Redirect bawaan starter-kit DIMATIKAN: KasirKu pakai halaman Settings
+    // sendiri di `/settings` (lihat routes/web.php). Kalau dibiarkan,
+    // route ini menimpa route `/settings` kita (didaftarkan lebih dulu),
+    // lalu melempar ke /settings/profile yang butuh auth → mental ke /.
+    // Route::redirect('settings', '/settings/profile');
 
     Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');

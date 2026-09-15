@@ -5,29 +5,6 @@
             class="fixed inset-0 z-[9999] overflow-hidden bg-[var(--bg-primary)] font-sans text-[var(--text-primary)]"
             @mousemove="handleGlobalMouseMove"
         >
-            <div class="absolute top-6 left-6 z-30">
-                <MagneticButton
-                    type="button"
-                    class="group flex items-center gap-2 rounded-full border-[var(--border)] bg-black/20 px-4 py-2.5 text-xs font-bold tracking-wide text-[var(--text-secondary)] backdrop-blur-md transition-all duration-200 hover:border-green-400/30 hover:bg-green-400/10 hover:text-[var(--text-primary)]"
-                    @click="router.push('/')"
-                >
-                    <svg
-                        class="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M15 19l-7-7 7-7"
-                        />
-                    </svg>
-                    Back to Home
-                </MagneticButton>
-            </div>
-
             <div class="absolute top-6 right-6 z-30">
                 <motion.button
                     :while-hover="{ scale: 1.05 }"
@@ -67,8 +44,8 @@
                         ease: 'easeInOut',
                     }"
                 >
-                    <span>GREEN</span>
-                    <span class="mt-[-8vw]">ECO</span>
+                    <span>KASIR</span>
+                    <span class="mt-[-8vw]">KU</span>
                 </motion.div>
             </div>
 
@@ -77,14 +54,13 @@
             <div class="absolute inset-0 z-10 flex">
                 <motion.div
                     :initial="false"
-                    :animate="{ left: greenPanelLeft }"
+                    :animate="{ left: '50%' }"
                     :transition="{ duration: 0 }"
                     class="absolute top-0 flex h-full w-[50vw] items-center justify-center p-12"
                 >
                     <AnimatePresence mode="wait">
                         <motion.div
-                            v-if="!isSweeping"
-                            :key="activeForm"
+                            :key="'words'"
                             :initial="{ opacity: 0, scale: 0.96 }"
                             :animate="{ opacity: 1, scale: 1 }"
                             :exit="{ opacity: 0, scale: 0.96 }"
@@ -103,20 +79,14 @@
                                     />
                                 </span>
                                 {{
-                                    isSignup
-                                        ? 'Already a member?'
-                                        : 'New to the movement?'
+                                    'KasirKu • POS Kasir'
                                 }}
                             </div>
 
                             <h3
                                 class="text-5xl leading-[1.05] font-black tracking-tighter whitespace-pre-line !text-white text-[var(--text-primary)] drop-shadow-[0_4px_30px_rgba(0,0,0,0.5)] lg:text-6xl"
                             >
-                                {{
-                                    isSignup
-                                        ? 'Welcome\nBack!'
-                                        : 'Join The\nFuture'
-                                }}
+                                {{ 'Jualan\nMakin Mudah' }}
                             </h3>
 
                             <div
@@ -145,45 +115,17 @@
                                 </AnimatePresence>
                             </div>
 
-                            <MagneticButton
-                                class="group mt-4 flex items-center gap-3 rounded-full border border-green-400/50 bg-emerald-500/20 px-12 py-4 text-sm font-black tracking-widest !text-white text-[var(--text-primary)] uppercase shadow-[0_0_30px_rgba(34,197,94,0.25)] backdrop-blur-md transition-all duration-300 hover:bg-green-400 hover:text-black"
-                                @click="
-                                    handleSwitchMode(
-                                        isSignup ? 'login' : 'signup',
-                                    )
-                                "
-                            >
-                                {{ isSignup ? 'Log In Now' : 'Create Account' }}
-                                <svg
-                                    class="h-4 w-4 transition-transform group-hover:translate-x-1"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2.5"
-                                        d="M14 5l7 7m0 0l-7 7m7-7H3"
-                                    />
-                                </svg>
-                            </MagneticButton>
                         </motion.div>
                     </AnimatePresence>
                 </motion.div>
                 <motion.div
                     :initial="false"
-                    :animate="{ left: blackPanelLeft }"
+                    :animate="{ left: '0%' }"
                     :transition="{ duration: 0 }"
                     class="absolute top-0 z-20 h-full w-[50vw] bg-[var(--bg-panel)]"
                 >
                     <div
-                        class="pointer-events-none absolute top-0 h-full w-[100px]"
-                        :class="
-                            isSignup
-                                ? '-right-[99px]'
-                                : '-left-[99px] scale-x-[-1]'
-                        "
+                        class="pointer-events-none absolute top-0 h-full w-[100px] -right-[99px]"
                     >
                         <svg
                             class="h-full w-full"
@@ -207,14 +149,13 @@
                     >
                         <AnimatePresence mode="wait">
                             <motion.div
-                                v-if="!isSweeping"
-                                :key="activeForm"
+                                :key="'login'"
                                 :initial="{
                                     opacity: 0,
-                                    x: isSignup ? 20 : -20,
+                                    x: 20,
                                 }"
                                 :animate="{ opacity: 1, x: 0 }"
-                                :exit="{ opacity: 0, x: isSignup ? -20 : 20 }"
+                                :exit="{ opacity: 0, x: -20 }"
                                 :transition="{
                                     duration: 0.25,
                                     ease: EASE_FAST,
@@ -225,11 +166,7 @@
                                     <h2
                                         class="flex items-center gap-3 text-4xl font-black tracking-tight text-[var(--text-primary)]"
                                     >
-                                        {{
-                                            isSignup
-                                                ? 'Get Started'
-                                                : 'Welcome Back'
-                                        }}
+                                        {{ 'Selamat Datang' }}
                                         <div
                                             class="h-2.5 w-2.5 animate-pulse rounded-full bg-green-400 shadow-[0_0_10px_#4ade80]"
                                         />
@@ -238,9 +175,7 @@
                                         class="mt-2 text-sm font-medium text-[var(--text-secondary)]"
                                     >
                                         {{
-                                            isSignup
-                                                ? 'Start your eco-journey and make an impact.'
-                                                : 'Sign in to continue your green mission.'
+                                            'Masuk untuk mengelola kasir tokomu.'
                                         }}
                                     </p>
                                 </div>
@@ -253,190 +188,14 @@
                                 </div>
 
                                 <form
-                                    v-if="isSignup"
-                                    class="flex flex-col gap-4"
-                                    @submit.prevent="handleSignup"
+                                    class="flex flex-col gap-5"
+                                    @submit.prevent="handleLogin"
                                 >
-                                    <FloatingInput
-                                        v-model="formState.name"
-                                        type="text"
-                                        label="Nama Lengkap"
-                                        :icon="IconUser"
-                                    />
                                     <FloatingInput
                                         v-model="formState.username"
                                         type="text"
                                         label="Username"
                                         :icon="IconUser"
-                                    />
-                                    <FloatingInput
-                                        v-model="formState.email"
-                                        type="email"
-                                        label="Email Address"
-                                        :icon="IconMail"
-                                    />
-                                    <FloatingInput
-                                        v-model="formState.password"
-                                        type="password"
-                                        label="Create Password"
-                                        :icon="IconLock"
-                                    />
-
-                                    <div class="mt-1 grid grid-cols-2 gap-3">
-                                        <button
-                                            type="button"
-                                            class="group relative flex h-[92px] flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border transition-all duration-200"
-                                            :class="
-                                                role === 'user'
-                                                    ? 'border-green-400/80 bg-green-500/10 text-green-300 shadow-[0_0_25px_rgba(34,197,94,0.12)]'
-                                                    : 'border-[var(--border)] bg-[var(--input-bg)] text-[var(--text-secondary)] hover:bg-[var(--input-hover-bg)] hover:text-[var(--text-primary)]'
-                                            "
-                                            @click="role = 'user'"
-                                        >
-                                            <div
-                                                class="flex h-10 w-10 items-center justify-center rounded-xl transition-all"
-                                                :class="
-                                                    role === 'user'
-                                                        ? 'bg-green-400/15 text-green-400'
-                                                        : 'bg-[var(--input-bg)] text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]'
-                                                "
-                                            >
-                                                <IconUser />
-                                            </div>
-                                            <span
-                                                class="text-[11px] font-black tracking-[0.18em] uppercase"
-                                                >User</span
-                                            >
-                                            <motion.div
-                                                v-if="role === 'user'"
-                                                layoutId="roleActive"
-                                                class="absolute right-5 bottom-0 left-5 h-[2px] rounded-full bg-green-400"
-                                            />
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            class="group relative flex h-[92px] flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border transition-all duration-200"
-                                            :class="
-                                                role === 'umkm'
-                                                    ? 'border-green-400/80 bg-green-500/10 text-green-300 shadow-[0_0_25px_rgba(34,197,94,0.12)]'
-                                                    : 'border-[var(--border)] bg-[var(--input-bg)] text-[var(--text-secondary)] hover:bg-[var(--input-hover-bg)] hover:text-[var(--text-primary)]'
-                                            "
-                                            @click="role = 'umkm'"
-                                        >
-                                            <div
-                                                class="flex h-10 w-10 items-center justify-center rounded-xl transition-all"
-                                                :class="
-                                                    role === 'umkm'
-                                                        ? 'bg-green-400/15 text-green-400'
-                                                        : 'bg-[var(--input-bg)] text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]'
-                                                "
-                                            >
-                                                <IconStore />
-                                            </div>
-                                            <span
-                                                class="text-[11px] font-black tracking-[0.18em] uppercase"
-                                                >UMKM</span
-                                            >
-                                            <motion.div
-                                                v-if="role === 'umkm'"
-                                                layoutId="roleActive"
-                                                class="absolute right-5 bottom-0 left-5 h-[2px] rounded-full bg-green-400"
-                                            />
-                                        </button>
-                                    </div>
-
-                                    <label
-                                        class="group mt-1 flex cursor-pointer items-start gap-3"
-                                    >
-                                        <div
-                                            class="relative mt-0.5 flex h-5 w-5 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--input-bg)] transition-colors group-hover:border-green-400/50"
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                class="absolute cursor-pointer opacity-0"
-                                                :checked="formState.remember"
-                                                @change="
-                                                    handleInput(
-                                                        'remember',
-                                                        $event.target.checked,
-                                                    )
-                                                "
-                                            />
-                                            <motion.svg
-                                                v-if="formState.remember"
-                                                :initial="{ scale: 0 }"
-                                                :animate="{ scale: 1 }"
-                                                class="h-3.5 w-3.5 text-green-400"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="3"
-                                                    d="M5 13l4 4L19 7"
-                                                />
-                                            </motion.svg>
-                                        </div>
-                                        <p
-                                            class="text-xs leading-relaxed text-[var(--text-secondary)]"
-                                        >
-                                            I agree to the
-                                            <span
-                                                class="text-green-400 hover:underline"
-                                                >Terms of Service</span
-                                            >
-                                            and
-                                            <span
-                                                class="text-green-400 hover:underline"
-                                                >Privacy Policy</span
-                                            >.
-                                        </p>
-                                    </label>
-
-                                    <MagneticButton
-                                        type="submit"
-                                        :disabled="isLoading"
-                                        class="group relative mt-2 w-full overflow-hidden rounded-2xl bg-gradient-to-r from-green-400 via-emerald-400 to-green-500 py-4 text-sm font-black tracking-widest text-black uppercase transition-all duration-300 hover:shadow-[0_0_35px_rgba(74,222,128,0.5)] disabled:cursor-not-allowed disabled:opacity-70"
-                                    >
-                                        <span
-                                            class="relative z-10 flex items-center justify-center gap-2"
-                                        >
-                                            {{
-                                                isLoading
-                                                    ? 'Memproses...'
-                                                    : 'Create Account'
-                                            }}
-                                            <svg
-                                                v-if="!isLoading"
-                                                class="h-4 w-4"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2.5"
-                                                    d="M17 8l4 4m0 0l-4 4m4-4H3"
-                                                />
-                                            </svg>
-                                        </span>
-                                    </MagneticButton>
-                                </form>
-
-                                <form
-                                    v-else
-                                    class="flex flex-col gap-5"
-                                    @submit.prevent="handleLogin"
-                                >
-                                    <FloatingInput
-                                        v-model="formState.email"
-                                        type="email"
-                                        label="Email"
-                                        :icon="IconMail"
                                     />
                                     <FloatingInput
                                         v-model="formState.password"
@@ -504,7 +263,7 @@
                                             {{
                                                 isLoading
                                                     ? 'Memproses...'
-                                                    : 'Sign In Securely'
+                                                    : 'Masuk'
                                             }}
                                             <svg
                                                 v-if="!isLoading"
@@ -522,51 +281,24 @@
                                             </svg>
                                         </span>
                                     </MagneticButton>
+
+                                    <div class="mt-1 rounded-2xl border border-green-400/20 bg-green-500/[0.06] px-4 py-3 text-center">
+                                        <p class="text-[11px] font-black tracking-[0.2em] text-green-400/80 uppercase">
+                                            Akun demo
+                                        </p>
+                                        <p class="mt-1 font-mono text-[11px] text-[var(--text-secondary)]">
+                                            kasir.01 • admin.kantin • superadmin
+                                        </p>
+                                        <p class="mt-0.5 text-[10px] text-[var(--text-secondary)] opacity-70">
+                                            password bebas (demo)
+                                        </p>
+                                    </div>
                                 </form>
                             </motion.div>
                         </AnimatePresence>
                     </div>
                 </motion.div>
             </div>
-            <div
-                class="pointer-events-none absolute inset-0 z-50 overflow-hidden"
-            >
-                <AnimatePresence>
-                    <motion.div
-                        v-if="isSweeping"
-                        :initial="{
-                            x: sweepDir === 'ltr' ? '-100vw' : '100vw',
-                        }"
-                        :animate="{ x: '0vw' }"
-                        :exit="{
-                            x: sweepDir === 'ltr' ? '100vw' : '-100vw',
-                        }"
-                        :transition="{ duration: 0.35, ease: EASE_FAST }"
-                        class="absolute top-0 flex h-full w-full items-center justify-center overflow-visible bg-gradient-to-br from-emerald-500 via-green-500 to-emerald-700 shadow-[0_0_100px_rgba(34,197,94,0.8)]"
-                    >
-                        <div
-                            class="absolute inset-0 bg-white/10 backdrop-blur-md"
-                        />
-                        <div
-                            class="pointer-events-none absolute top-0 h-full w-[120px]"
-                            :class="
-                                sweepDir === 'ltr'
-                                    ? '-right-[119px]'
-                                    : '-left-[119px] scale-x-[-1]'
-                            "
-                        >
-                            <svg
-                                class="h-full w-full overflow-visible"
-                                viewBox="0 0 100 1000"
-                                preserveAspectRatio="none"
-                            >
-                                <path fill="#22c55e" :d="SWEEP_WAVE" />
-                            </svg>
-                        </div>
-                    </motion.div>
-                </AnimatePresence>
-            </div>
-
             <motion.div
                 class="pointer-events-none absolute inset-0 z-40 mix-blend-overlay"
                 :style="{ background: spotlightBg }"
@@ -579,14 +311,14 @@
 import {
     ref,
     reactive,
-    computed,
     onMounted,
     onUnmounted,
-    watch,
     defineComponent,
     h,
 } from 'vue';
-import { router as inertiaRouter, usePage } from '@inertiajs/vue3';
+import { router as inertiaRouter } from '@inertiajs/vue3';
+import { loginAsMockUser } from '@/composables/useAuthMock';
+import { usePosStore } from '@/composables/usePosStore';
 import {
     motion,
     AnimatePresence,
@@ -602,22 +334,20 @@ const WAVE_A =
     'M0,-200 L60,-200 C120,150 0,400 80,750 C130,950 20,1050 50,1200 L0,1200 Z';
 const WAVE_B =
     'M0,-200 L40,-200 C0,150 120,400 30,750 C-10,950 90,1050 60,1200 L0,1200 Z';
-const SWEEP_WAVE =
-    'M0,-200 L80,-200 C150,200 -20,500 90,800 C160,1000 30,1100 70,1200 L0,1200 Z';
 const EASE_FAST = [0.16, 1, 0.3, 1];
 
 const QUOTES = [
     {
-        text: 'Supporting local UMKM creates a sustainable future for our community.',
-        author: 'Eco Daily',
+        text: 'Kasir cepat, antrean pendek, pelanggan senang.',
+        author: 'KasirKu POS',
     },
     {
-        text: 'Small green steps lead to giant leaps for our planet.',
-        author: 'Green Earth',
+        text: 'Stok tercatat, omzet terpantau, usaha tenang.',
+        author: 'KasirKu POS',
     },
     {
-        text: 'Every eco-friendly purchase is a vote for the world you want.',
-        author: 'Sustainability Now',
+        text: 'Satu aplikasi untuk kasir, stok, dan laporan.',
+        author: 'KasirKu POS',
     },
 ];
 
@@ -646,28 +376,6 @@ const IconUser = defineComponent({
                 strokeLinejoin: 'round',
                 strokeWidth: 1.7,
                 d: 'M5 21a7 7 0 0114 0',
-            }),
-        ]),
-});
-
-const IconMail = defineComponent({
-    name: 'IconMail',
-    setup: () => () =>
-        h('svg', baseSvg('w-5 h-5'), [
-            h('path', {
-                strokeLinecap: 'round',
-                strokeLinejoin: 'round',
-                strokeWidth: 1.7,
-                d: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8',
-            }),
-            h('rect', {
-                x: 3,
-                y: 5,
-                width: 18,
-                height: 14,
-                rx: 2,
-                stroke: 'currentColor',
-                strokeWidth: 1.7,
             }),
         ]),
 });
@@ -746,37 +454,6 @@ const IconEyeOff = defineComponent({
                 strokeLinejoin: 'round',
                 strokeWidth: 1.7,
                 d: 'M6.53 6.53A10.04 10.04 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.02 10.02 0 01-4.043 5.25',
-            }),
-        ]),
-});
-
-const IconStore = defineComponent({
-    name: 'IconStore',
-    setup: () => () =>
-        h('svg', baseSvg('w-6 h-6'), [
-            h('path', {
-                strokeLinecap: 'round',
-                strokeLinejoin: 'round',
-                strokeWidth: 1.7,
-                d: 'M3 10.5L5 4h14l2 6.5',
-            }),
-            h('path', {
-                strokeLinecap: 'round',
-                strokeLinejoin: 'round',
-                strokeWidth: 1.7,
-                d: 'M4 10v10h16V10',
-            }),
-            h('path', {
-                strokeLinecap: 'round',
-                strokeLinejoin: 'round',
-                strokeWidth: 1.7,
-                d: 'M9 20v-5h6v5',
-            }),
-            h('path', {
-                strokeLinecap: 'round',
-                strokeLinejoin: 'round',
-                strokeWidth: 1.7,
-                d: 'M3 10c0 1.1.9 2 2 2s2-.9 2-2c0 1.1.9 2 2 2s2-.9 2-2c0 1.1.9 2 2 2s2-.9 2-2c0 1.1.9 2 2 2s2-.9 2-2c0 1.1.9 2 2-2',
             }),
         ]),
 });
@@ -1002,93 +679,19 @@ const ParticlesEngine = defineComponent({
 });
 
 /* ================================================== */
-/* ROUTER (Inertia shim) */
+/* STATE (login saja — tanpa mode signup) */
 /* ================================================== */
-const page = usePage();
-
-const parseLocation = (url) => {
-    const [path, search = ''] = String(url || '/').split('?');
-    const query = Object.fromEntries(new URLSearchParams(search));
-    return { path: path || '/', query };
-};
-
-const route = computed(() => parseLocation(page.url));
-
-const router = {
-    push: (to) => inertiaRouter.visit(to),
-    replace: (to) => {
-        if (to && typeof to === 'object') {
-            const query = new URLSearchParams(to.query || {}).toString();
-            inertiaRouter.visit(query ? `${to.path}?${query}` : to.path, {
-                replace: true,
-            });
-            return;
-        }
-        inertiaRouter.visit(to, { replace: true });
-    },
-};
-
-const pathname = computed(() => route.value.path);
-const queryMode = computed(() => route.value.query.mode);
-
-/* ================================================== */
-/* STATE */
-/* ================================================== */
-const activeForm = ref('signup');
-const isSweeping = ref(false);
-const sweepDir = ref('ltr');
-const role = ref('user');
 const quoteIdx = ref(0);
 const theme = ref('dark');
 
 const formState = reactive({
-    name: '',
     username: '',
-    email: '',
     password: '',
     remember: false,
 });
 
 const errorMessage = ref(null);
 const isLoading = ref(false);
-
-/* ================================================== */
-/* API STUB */
-/* ================================================== */
-const supabase = {
-    auth: {
-        signInWithOtp: async (opts) => {
-            // # API dihapus
-            console.log('# signInWithOtp', opts);
-            return { error: null };
-        },
-        signInWithPassword: async (opts) => {
-            // # API dihapus
-            console.log('# signInWithPassword', opts);
-            return { data: { user: null }, error: null };
-        },
-        signOut: async () => {
-            // # API dihapus
-            console.log('# signOut');
-        },
-    },
-    from: (table) => ({
-        select: () => ({
-            eq: () => ({
-                single: async () => {
-                    // # API dihapus
-                    console.log('# select', table);
-                    return { data: null };
-                },
-            }),
-        }),
-        insert: async (data) => {
-            // # API dihapus
-            console.log('# insert', table, data);
-            return { error: null };
-        },
-    }),
-};
 
 /* ================================================== */
 /* THEME */
@@ -1152,45 +755,11 @@ onUnmounted(() => {
 });
 
 /* ================================================== */
-/* SYNC MODE DENGAN QUERY */
-/* ================================================== */
-watch(
-    queryMode,
-    (newMode) => {
-        if (newMode === 'login' && activeForm.value !== 'login')
-            activeForm.value = 'login';
-        else if (newMode === 'signup' && activeForm.value !== 'signup')
-            activeForm.value = 'signup';
-    },
-    { immediate: true },
-);
-
-/* ================================================== */
-/* SWITCH MODE */
-/* ================================================== */
-const handleSwitchMode = (targetMode) => {
-    if (targetMode === activeForm.value || isSweeping.value) return;
-    isSweeping.value = true;
-    sweepDir.value = targetMode === 'login' ? 'ltr' : 'rtl';
-    setTimeout(() => {
-        activeForm.value = targetMode;
-        router.replace({ path: pathname.value, query: { mode: targetMode } });
-        setTimeout(() => {
-            isSweeping.value = false;
-        }, 350);
-    }, 250);
-};
-
-/* ================================================== */
-/* FORM HANDLER */
+/* FORM HANDLER (login username → role dari tb_user) */
 /* ================================================== */
 const handleInput = (key, val) => {
     formState[key] = val;
 };
-
-const isSignup = computed(() => activeForm.value === 'signup');
-const blackPanelLeft = computed(() => (isSignup.value ? '0%' : '50%'));
-const greenPanelLeft = computed(() => (isSignup.value ? '50%' : '0%'));
 
 /* ================================================== */
 /* THEME VARS */
@@ -1227,146 +796,43 @@ const themeVars = {
 };
 
 /* ================================================== */
-/* AUTH HANDLERS */
+/* AUTH HANDLER — login username, role ngikut tb_user */
 /* ================================================== */
-const handleSignup = async (e) => {
-    e.preventDefault();
-    isLoading.value = true;
-    errorMessage.value = null;
-
-    if (formState.name.trim().length < 1) {
-        errorMessage.value = 'Nama lengkap wajib diisi.';
-        isLoading.value = false;
-        return;
-    }
-    if (
-        formState.username.trim().length < 8 ||
-        formState.username.trim().length > 22
-    ) {
-        errorMessage.value = 'Username harus 8-22 karakter.';
-        isLoading.value = false;
-        return;
-    }
-    if (!/^[a-zA-Z0-9_]+$/.test(formState.username.trim())) {
-        errorMessage.value =
-            'Username hanya boleh huruf, angka, dan underscore.';
-        isLoading.value = false;
-        return;
-    }
-    if (!/^\S+@\S+\.\S+$/.test(formState.email.trim())) {
-        errorMessage.value = 'Format email tidak valid.';
-        isLoading.value = false;
-        return;
-    }
-    if (formState.password.length < 8) {
-        errorMessage.value = 'Password minimal 8 karakter.';
-        isLoading.value = false;
-        return;
-    }
-
-    localStorage.setItem(
-        'pending_profile',
-        JSON.stringify({
-            name: formState.name,
-            username: formState.username,
-            role: role.value,
-            email: formState.email,
-        }),
-    );
-
-    try {
-        // # API dihapus
-        const resp = await supabase.auth.signInWithOtp({
-            email: formState.email,
-            options: { shouldCreateUser: true },
-        });
-        console.log('signInWithOtp response:', resp);
-        const { error } = resp;
-        if (error) throw error;
-
-        router.push(`/auth/otp?email=${encodeURIComponent(formState.email)}`);
-    } catch (err) {
-        errorMessage.value = err?.message || 'Terjadi kesalahan';
-    } finally {
-        isLoading.value = false;
-    }
-};
+const store = usePosStore();
+const ROLE_BY_ID = { 1: 'super admin', 2: 'admin', 3: 'kasir' };
 
 const handleLogin = async (e) => {
     e.preventDefault();
     isLoading.value = true;
     errorMessage.value = null;
 
-    if (!formState.email.trim() || !formState.password.trim()) {
-        errorMessage.value = 'Email dan password wajib diisi.';
+    const uname = formState.username.trim().toLowerCase();
+    if (!uname || !formState.password.trim()) {
+        errorMessage.value = 'Username dan password wajib diisi.';
         isLoading.value = false;
         return;
     }
 
-    try {
-        // # API dihapus
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email: formState.email,
-            password: formState.password,
-        });
-
-        if (error) throw error;
-
-        const user = data.user;
-        if (!user) throw new Error('User tidak ditemukan');
-
-        if (!user.email_confirmed_at) {
-            await supabase.auth.signOut();
-            localStorage.setItem('pending_email', formState.email);
-            router.push(
-                `/auth/otp?email=${encodeURIComponent(formState.email)}`,
-            );
-            return;
-        }
-
-        let { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-
-        if (!profile) {
-            const { error: insertError } = await supabase
-                .from('profiles')
-                .insert({
-                    id: user.id,
-                    username: user.user_metadata?.username || user.email,
-                    name: user.user_metadata?.name || user.email,
-                    role: user.user_metadata?.role || 'user',
-                    is_active: true,
-                    email_verified_at: new Date().toISOString(),
-                });
-            if (insertError) throw insertError;
-
-            const { data: newProfile } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .single();
-            profile = newProfile;
-        }
-
-        if (profile?.role === 'admin') router.push('/dashboard/admin');
-        else if (profile?.role === 'umkm') {
-            const { data: umkmData } = await supabase
-                .from('umkm')
-                .select('id')
-                .eq('user_id', user.id)
-                .single();
-            if (!umkmData) router.push('/auth/profile');
-            else router.push('/dashboard/umkm');
-        } else {
-            router.push('/dashboard/user');
-        }
-    } catch (err) {
-        errorMessage.value = err?.message || 'Login gagal';
-    } finally {
+    // MODE DEMO FRONTEND (tanpa backend): cocokkan username ke tb_user,
+    // peran ngikut id_role user tersebut. Backend nanti: POST /login.
+    const found = store.usersAktif.value.find((u) => u.username.toLowerCase() === uname);
+    if (!found) {
+        errorMessage.value = `Username "${formState.username.trim()}" tidak terdaftar.`;
         isLoading.value = false;
+        return;
     }
+    if (!found.is_active) {
+        errorMessage.value = `Akun "${found.username}" nonaktif. Hubungi admin.`;
+        isLoading.value = false;
+        return;
+    }
+    loginAsMockUser({
+        id_user: found.id_user,
+        username: found.username,
+        nama_lengkap: found.nama_lengkap,
+        role: ROLE_BY_ID[found.id_role] ?? 'kasir',
+    });
+    inertiaRouter.visit('/dashboard');
+    isLoading.value = false;
 };
 </script>
