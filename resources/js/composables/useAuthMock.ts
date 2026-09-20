@@ -44,14 +44,13 @@ export const ROLE_COLOR: Record<MockRole, string> = {
 };
 
 /* Matriks akses menu per peran (key = href sidebar).
-   kasir: 1 dagang di 1 sekolah — jualan + CRUD pelanggan dagangannya sendiri
-     + notifikasi khusus kasir (info pelanggan & shift, tanpa data admin).
-   admin: 1 sekolah — operasional penuh, tapi terbatas pada sekolahnya dan akun kasir.
-   super admin: semua sekolah — kendali penuh + panel jaringan. */
+   kasir: Dashboard, Transaksi, Riwayat Transaksi, Pelanggan, Notifikasi, Settings.
+   admin: Dashboard, Produk, Pembelian, Supplier, User, Laporan, Notifikasi.
+   super admin: Dashboard, Sekolah, User, Laporan, Notifikasi. */
 const MATRIX: Record<MockRole, string[]> = {
-    kasir: ['/dashboard', '/transaksi', '/pelanggan', '/notifikasi', '/settings'],
-    admin: ['/dashboard', '/transaksi', '/pembelian', '/produk', '/pelanggan', '/supplier', '/user', '/laporan', '/notifikasi', '/settings'],
-    'super admin': ['/dashboard', '/transaksi', '/pembelian', '/produk', '/pelanggan', '/supplier', '/user', '/laporan', '/notifikasi', '/settings'],
+    kasir: ['/dashboard', '/transaksi', '/riwayat-transaksi', '/pelanggan', '/notifikasi', '/settings'],
+    admin: ['/dashboard', '/produk', '/pembelian', '/supplier', '/user', '/laporan', '/notifikasi'],
+    'super admin': ['/dashboard', '/sekolah', '/user', '/laporan', '/notifikasi'],
 };
 
 /* Tidak ada halaman read-only lagi: kasir boleh CRUD pelanggan.

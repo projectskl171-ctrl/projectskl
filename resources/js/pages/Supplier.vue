@@ -1,5 +1,5 @@
 <template>
-    <RoleDenied v-if="!auth.can('/supplier')" page="Supplier" :needed="['Admin', 'Super Admin']" />
+    <RoleDenied v-if="!auth.can('/supplier')" page="Supplier" :needed="['Admin']" />
     <div v-else class="space-y-4">
         <div class="flex flex-col gap-2 sm:flex-row">
             <input v-model="q" placeholder="Cari supplier / telepon…" class="h-10 flex-1 rounded-lg border border-white/[0.08] bg-black/40 px-3 text-sm outline-none placeholder:text-white/25" />

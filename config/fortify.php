@@ -28,7 +28,9 @@ return [
     |
     */
 
-    'passwords' => 'users',
+    // Broker reset-password email memakai akun starter-kit (tabel users),
+    // karena tb_user POS tidak memiliki kolom email.
+    'passwords' => 'fortify_users',
 
     /*
     |--------------------------------------------------------------------------
@@ -45,7 +47,7 @@ return [
     |
     */
 
-    'username' => 'email',
+    'username' => 'username',
 
     'email' => 'email',
 

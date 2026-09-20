@@ -39,7 +39,7 @@
             <div class="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
                 <div class="flex items-center justify-between">
                     <h2 class="text-sm font-bold">Transaksi Shift Saya ({{ myToday.length }})</h2>
-                    <Link href="/transaksi" class="text-[11px] font-bold text-emerald-400 hover:text-emerald-300">Riwayat lengkap →</Link>
+                    <Link href="/riwayat-transaksi" class="text-[11px] font-bold text-emerald-400 hover:text-emerald-300">Riwayat lengkap →</Link>
                 </div>
                 <div class="mt-3 space-y-2">
                     <div v-for="t in myToday.slice(0, 6)" :key="t.id_penjualan" class="flex items-center justify-between rounded-lg border border-white/[0.05] bg-black/30 px-3 py-2.5 text-xs">
@@ -136,7 +136,8 @@
                 <div class="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
                     <div class="flex items-center justify-between">
                         <h2 class="text-sm font-bold tracking-tight">Penjualan Terbaru</h2>
-                        <Link href="/transaksi" class="text-[11px] font-bold text-emerald-400 hover:text-emerald-300">Kasir →</Link>
+                        <Link v-if="auth.can('/riwayat-transaksi')" href="/riwayat-transaksi" class="text-[11px] font-bold text-emerald-400 hover:text-emerald-300">Riwayat →</Link>
+                        <Link v-else href="/laporan" class="text-[11px] font-bold text-emerald-400 hover:text-emerald-300">Laporan →</Link>
                     </div>
                     <div class="mt-4 space-y-2.5">
                         <div v-for="t in recent" :key="t.id_penjualan" class="flex items-center gap-3 rounded-lg border border-white/[0.05] bg-white/[0.02] px-3 py-2.5">
@@ -149,7 +150,7 @@
                         </div>
                         <p v-if="!recent.length" class="py-6 text-center text-xs text-white/30">Belum ada transaksi pada scope ini.</p>
                     </div>
-                    <Link href="/transaksi" class="mt-4 flex h-9 w-full items-center justify-center rounded-lg bg-emerald-500 text-xs font-bold text-white transition-colors hover:bg-emerald-400">+ Transaksi Baru</Link>
+                    <Link v-if="auth.can('/transaksi')" href="/transaksi" class="mt-4 flex h-9 w-full items-center justify-center rounded-lg bg-emerald-500 text-xs font-bold text-white transition-colors hover:bg-emerald-400">+ Transaksi Baru</Link>
                 </div>
             </div>
 
@@ -157,7 +158,7 @@
                 <div class="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
                     <div class="flex items-center justify-between">
                         <h2 class="text-sm font-bold tracking-tight">Stok Menipis <span class="text-white/30">({{ stokScope.length }})</span></h2>
-                        <Link href="/produk" class="text-[11px] font-bold text-amber-400 hover:text-amber-300">Kelola →</Link>
+                        <Link v-if="auth.can('/produk')" href="/produk" class="text-[11px] font-bold text-amber-400 hover:text-amber-300">Kelola →</Link>
                     </div>
                     <div class="mt-3 overflow-hidden rounded-lg border border-white/[0.05]">
                         <table class="w-full text-left text-xs">

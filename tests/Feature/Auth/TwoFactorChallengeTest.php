@@ -1,11 +1,11 @@
 <?php
 
-use App\Models\User;
-use Inertia\Testing\AssertableInertia as Assert;
+use Database\Seeders\DatabaseSeeder;
 use Laravel\Fortify\Features;
 
 beforeEach(function () {
     $this->skipUnlessFortifyHas(Features::twoFactorAuthentication());
+    $this->seed(DatabaseSeeder::class);
 });
 
 test('two factor challenge redirects to login when not authenticated', function () {
@@ -14,22 +14,16 @@ test('two factor challenge redirects to login when not authenticated', function 
     $response->assertRedirect(route('login'));
 });
 
-test('two factor challenge can be rendered', function () {
-    Features::twoFactorAuthentication([
-        'confirm' => true,
-        'confirmPassword' => true,
+test('tb_user accounts have no two factor challenge step', function () {
+    // tb_user (schema guru) tidak memiliki kolom 2FA; login username
+    // langsung terautentikasi tanpa challenge.
+    $this->post(route('login.store'), [
+        'username' => 'sch001_kasir',
+        'password' => '123',
     ]);
 
-    $user = User::factory()->withTwoFactor()->create();
-
-    $this->post(route('login'), [
-        'email' => $user->email,
-        'password' => 'password',
-    ]);
-
-    $this->get(route('two-factor.login'))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('auth/TwoFactorChallenge'),
-        );
+    $this->assertAuthenticated();
+    // Tidak ada challenge: user terautentikasi penuh langsung diarahkan
+    // ke dashboard bila membuka halaman challenge.
+    $this->get(route('two-factor.login'))->assertRedirect(route('dashboard'));
 });

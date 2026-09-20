@@ -1,5 +1,6 @@
 <template>
-    <div class="space-y-4">
+    <RoleDenied v-if="!auth.can('/pelanggan')" page="Pelanggan" :needed="['Kasir']" />
+    <div v-else class="space-y-4">
         <div class="grid grid-cols-3 gap-4">
             <div v-for="s in stats" :key="s.label" class="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
                 <p class="text-[11px] text-white/40">{{ s.label }}</p><p class="mt-1 text-xl font-black">{{ s.value }}</p>
@@ -58,13 +59,16 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
+import RoleDenied from '@/components/RoleDenied.vue';
 import { hydrate, usePosStore } from '@/composables/usePosStore';
+import { useAuthMock } from '@/composables/useAuthMock';
 import { formatRupiahShort } from '@/lib/format';
 
 defineOptions({ layout: DashboardLayout });
 const props = defineProps({ pelanggan: Array });
 onMounted(() => hydrate(props));
 const store = usePosStore();
+const auth = useAuthMock();
 const q = ref(''), fKel = ref(0), show = ref(false), form = ref({});
 
 const filtered = computed(() => store.pelangganAktif.value.filter((p) => {

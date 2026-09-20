@@ -1,75 +1,78 @@
 <?php
 
-use App\Models\User;
+use App\Models\TbUser;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Support\Facades\RateLimiter;
-use Laravel\Fortify\Features;
 
-test('login screen can be rendered', function () {
-    $response = $this->get(route('login'));
-
-    $response->assertOk();
+beforeEach(function () {
+    $this->seed(DatabaseSeeder::class);
 });
 
-test('users can authenticate using the login screen', function () {
-    $user = User::factory()->create();
+test('login screen redirects to the single AuthPage entry', function () {
+    $response = $this->get(route('login'));
 
+    $response->assertRedirect('/');
+});
+
+test('users can authenticate with username and password', function () {
     $response = $this->post(route('login.store'), [
-        'email' => $user->email,
-        'password' => 'password',
+        'username' => 'sch001_kasir',
+        'password' => '123',
     ]);
 
     $this->assertAuthenticated();
     $response->assertRedirect(route('dashboard', absolute: false));
 });
 
-test('users with two factor enabled are redirected to two factor challenge', function () {
-    $this->skipUnlessFortifyHas(Features::twoFactorAuthentication());
-
-    Features::twoFactorAuthentication([
-        'confirm' => true,
-        'confirmPassword' => true,
+test('users can authenticate via the JSON API', function () {
+    $response = $this->postJson('/api/auth/login', [
+        'username' => 'sch001_admin',
+        'password' => '123',
     ]);
 
-    $user = User::factory()->withTwoFactor()->create();
-
-    $response = $this->post(route('login'), [
-        'email' => $user->email,
-        'password' => 'password',
-    ]);
-
-    $response->assertRedirect(route('two-factor.login'));
-    $response->assertSessionHas('login.id', $user->id);
-    $this->assertGuest();
+    $response->assertOk()->assertJsonPath('data.username', 'sch001_admin');
+    $response->assertJsonPath('data.role', 'admin');
+    $response->assertJsonMissingPath('data.password');
+    $this->assertAuthenticated();
 });
 
 test('users can not authenticate with invalid password', function () {
-    $user = User::factory()->create();
-
-    $this->post(route('login.store'), [
-        'email' => $user->email,
+    $response = $this->postJson('/api/auth/login', [
+        'username' => 'sch001_kasir',
         'password' => 'wrong-password',
     ]);
 
+    $response->assertStatus(422);
     $this->assertGuest();
 });
 
-test('users can logout', function () {
-    $user = User::factory()->create();
+test('inactive users can not authenticate', function () {
+    $user = TbUser::where('username', 'sch001_kasir')->firstOrFail();
+    $user->update(['is_active' => 0]);
 
-    $response = $this->actingAs($user)->post(route('logout'));
+    $response = $this->postJson('/api/auth/login', [
+        'username' => 'sch001_kasir',
+        'password' => '123',
+    ]);
 
-    $response->assertRedirect(route('home'));
+    $response->assertStatus(422);
+    $this->assertGuest();
+});
 
+test('users can logout via the JSON API', function () {
+    $user = TbUser::where('username', 'sch001_kasir')->firstOrFail();
+
+    $response = $this->actingAs($user)->postJson('/api/auth/logout');
+
+    $response->assertOk();
     $this->assertGuest();
 });
 
 test('users are rate limited', function () {
-    $user = User::factory()->create();
-
-    RateLimiter::increment(md5('login'.implode('|', [$user->email, '127.0.0.1'])), amount: 5);
+    RateLimiter::increment(md5('login'.implode('|', ['sch001_kasir', '127.0.0.1'])), amount: 5);
 
     $response = $this->post(route('login.store'), [
-        'email' => $user->email,
+        'username' => 'sch001_kasir',
         'password' => 'wrong-password',
     ]);
 

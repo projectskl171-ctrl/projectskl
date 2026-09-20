@@ -134,13 +134,16 @@ import { router, usePage } from '@inertiajs/vue3';
 import DashboardSidebar from '@/components/DashboardSidebar.vue';
 import { ROLE_COLOR, logoutMock, useAuthMock } from '@/composables/useAuthMock';
 import { usePosStore } from '@/composables/usePosStore';
+import { apiLogout } from '@/lib/api';
 import { dayKey, formatRupiahShort, todayKey } from '@/lib/format';
 
 const auth = useAuthMock();
 const store = usePosStore();
 const keluar = () => {
-    logoutMock();
-    router.visit('/');
+    apiLogout().catch(() => {}).finally(() => {
+        logoutMock();
+        router.visit('/');
+    });
 };
 
 const page = usePage();
@@ -186,9 +189,9 @@ onUnmounted(() => window.removeEventListener('keydown', onKey));
 
 /* ================= NOTIFIKASI (ringkasan + badge, beda per peran) =================
    ATURAN: setiap alert hanya boleh link ke halaman yang BISA dibuka peran itu.
-   - kasir  : info pelanggan & shift sendiri → /pelanggan, /transaksi (tanpa data admin)
-   - admin  : info barang/stok & pembelian → /produk, /pembelian, /transaksi
-   - super admin : semua + piutang & jaringan */
+   - kasir  : /pelanggan, /transaksi
+   - admin  : /produk, /pembelian, /laporan
+   - super admin : /sekolah, /user, /laporan, /notifikasi */
 const notifOpen = ref(false);
 const role = computed(() => auth.role.value);
 const alerts = computed(() => {
@@ -204,23 +207,23 @@ const alerts = computed(() => {
             out.push({ icon: '💸', cls: 'bg-orange-500/15 text-orange-300', title: `${piutang.length} piutang belum bayar`, sub: `Total ${formatRupiahShort(piutang.reduce((s, t) => s + t.total_faktur, 0))} — hubungi pelanggan`, href: '/pelanggan' });
         const myId = auth.user.value?.id_user ?? -1;
         const shift = store.penjualanAktif.value.filter((p) => dayKey(p.tanggal_penjualan) === todayKey() && p.id_user === myId).length;
-        out.push({ icon: '🧾', cls: 'bg-emerald-500/15 text-emerald-300', title: `${shift} transaksi shift saya hari ini`, sub: 'Lihat riwayat di kasir', href: '/transaksi' });
+        out.push({ icon: '🧾', cls: 'bg-emerald-500/15 text-emerald-300', title: `${shift} transaksi shift saya hari ini`, sub: 'Lihat di riwayat transaksi', href: '/riwayat-transaksi' });
         return out;
     }
-    // ---- ADMIN & SUPER ADMIN: barang/stok ----
+    // ---- ADMIN & SUPER ADMIN: barang/stok (super admin dikembalikan ke /notifikasi) ----
     const habis = store.barangAktif.value.filter((b) => b.stok === 0);
     const tipis = store.barangAktif.value.filter((b) => b.stok > 0 && b.stok <= 10);
     for (const b of habis.slice(0, 3))
-        out.push({ icon: '⛔', cls: 'bg-rose-500/15 text-rose-300', title: `Stok habis: ${b.nama}`, sub: 'Segera restock via Pembelian', href: '/pembelian' });
+        out.push({ icon: '⛔', cls: 'bg-rose-500/15 text-rose-300', title: `Stok habis: ${b.nama}`, sub: role.value === 'admin' ? 'Segera restock via Pembelian' : 'Lihat di Notifikasi', href: role.value === 'admin' ? '/pembelian' : '/notifikasi' });
     if (tipis.length)
-        out.push({ icon: '⚠️', cls: 'bg-amber-500/15 text-amber-300', title: `${tipis.length} barang stok menipis (≤10)`, sub: tipis.slice(0, 2).map((b) => b.nama).join(', '), href: '/produk' });
+        out.push({ icon: '⚠️', cls: 'bg-amber-500/15 text-amber-300', title: `${tipis.length} barang stok menipis (≤10)`, sub: tipis.slice(0, 2).map((b) => b.nama).join(', '), href: role.value === 'admin' ? '/produk' : '/notifikasi' });
     // ---- ADMIN: + draft pembelian (operasional toko) ----
     if (role.value === 'admin') {
         const draft = store.pembelianAktif.value.filter((p) => p.status_pembelian === 'draft');
         if (draft.length)
             out.push({ icon: '📥', cls: 'bg-violet-500/15 text-violet-300', title: `${draft.length} pembelian masih draft`, sub: 'Selesaikan agar stok bertambah', href: '/pembelian' });
         const today = store.penjualanAktif.value.filter((p) => dayKey(p.tanggal_penjualan) === todayKey()).length;
-        out.push({ icon: '🧾', cls: 'bg-emerald-500/15 text-emerald-300', title: `${today} transaksi hari ini`, sub: 'Pantau di kasir / laporan', href: '/transaksi' });
+        out.push({ icon: '🧾', cls: 'bg-emerald-500/15 text-emerald-300', title: `${today} transaksi hari ini`, sub: 'Pantau di laporan', href: '/laporan' });
         return out;
     }
     // ---- SUPER ADMIN: semua notifikasi + jaringan ----
@@ -230,9 +233,9 @@ const alerts = computed(() => {
             out.push({ icon: '💸', cls: 'bg-orange-500/15 text-orange-300', title: `${piutang.length} piutang belum bayar`, sub: `Total ${formatRupiahShort(piutang.reduce((s, t) => s + t.total_faktur, 0))}`, href: '/laporan' });
         const draft = store.pembelianAktif.value.filter((p) => p.status_pembelian === 'draft');
         if (draft.length)
-            out.push({ icon: '📥', cls: 'bg-violet-500/15 text-violet-300', title: `${draft.length} pembelian masih draft`, sub: 'Selesaikan agar stok bertambah', href: '/pembelian' });
+            out.push({ icon: '📥', cls: 'bg-violet-500/15 text-violet-300', title: `${draft.length} pembelian masih draft`, sub: 'Lihat di Notifikasi', href: '/notifikasi' });
         const today = store.penjualanAktif.value.filter((p) => dayKey(p.tanggal_penjualan) === todayKey()).length;
-        out.push({ icon: '🧾', cls: 'bg-emerald-500/15 text-emerald-300', title: `${today} transaksi hari ini`, sub: 'Lihat riwayat di kasir', href: '/transaksi' });
+        out.push({ icon: '🧾', cls: 'bg-emerald-500/15 text-emerald-300', title: `${today} transaksi hari ini`, sub: 'Pantau di laporan', href: '/laporan' });
     }
     return out;
 });

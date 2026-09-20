@@ -1,5 +1,6 @@
 <template>
-    <div class="mx-auto max-w-3xl space-y-4">
+    <RoleDenied v-if="!auth.can('/settings')" page="Settings" :needed="['Kasir']" />
+    <div v-else class="mx-auto max-w-3xl space-y-4">
         <div class="flex gap-1.5 rounded-xl border border-white/[0.06] bg-white/[0.02] p-1.5">
             <button v-for="t in tabs" :key="t.key" @click="tab = t.key"
                 :class="tab === t.key ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'"
@@ -89,6 +90,7 @@
 import { onMounted, ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
+import RoleDenied from '@/components/RoleDenied.vue';
 import { hydrate, resetMockDb, usePosStore } from '@/composables/usePosStore';
 import { ROLE_COLOR, ROLE_LABEL, loginAs, updateMockProfile, useAuthMock } from '@/composables/useAuthMock';
 

@@ -287,10 +287,10 @@
                                             Akun demo
                                         </p>
                                         <p class="mt-1 font-mono text-[11px] text-[var(--text-secondary)]">
-                                            kasir.01 • admin.kantin • superadmin
+                                            sch001_kasir • sch001_admin • sch001_superadmin
                                         </p>
                                         <p class="mt-0.5 text-[10px] text-[var(--text-secondary)] opacity-70">
-                                            password bebas (demo)
+                                            password: 123
                                         </p>
                                     </div>
                                 </form>
@@ -318,7 +318,7 @@ import {
 } from 'vue';
 import { router as inertiaRouter } from '@inertiajs/vue3';
 import { loginAsMockUser } from '@/composables/useAuthMock';
-import { usePosStore } from '@/composables/usePosStore';
+import { apiLogin, apiMe } from '@/lib/api';
 import {
     motion,
     AnimatePresence,
@@ -796,43 +796,40 @@ const themeVars = {
 };
 
 /* ================================================== */
-/* AUTH HANDLER — login username, role ngikut tb_user */
+/* AUTH HANDLER — login nyata via backend (tb_user). */
+/* Session dibuat server; peran diambil dari /api/auth/me agar sidebar, */
+/* matriks akses, dan RoleDenied yang sudah ada tetap bekerja. */
 /* ================================================== */
-const store = usePosStore();
-const ROLE_BY_ID = { 1: 'super admin', 2: 'admin', 3: 'kasir' };
-
 const handleLogin = async (e) => {
     e.preventDefault();
     isLoading.value = true;
     errorMessage.value = null;
 
-    const uname = formState.username.trim().toLowerCase();
+    const uname = formState.username.trim();
     if (!uname || !formState.password.trim()) {
         errorMessage.value = 'Username dan password wajib diisi.';
         isLoading.value = false;
         return;
     }
 
-    // MODE DEMO FRONTEND (tanpa backend): cocokkan username ke tb_user,
-    // peran ngikut id_role user tersebut. Backend nanti: POST /login.
-    const found = store.usersAktif.value.find((u) => u.username.toLowerCase() === uname);
-    if (!found) {
-        errorMessage.value = `Username "${formState.username.trim()}" tidak terdaftar.`;
+    try {
+        await apiLogin(uname, formState.password, formState.remember);
+        const me = await apiMe();
+        const u = me.data;
+        loginAsMockUser({
+            id_user: u.id_user,
+            username: u.username,
+            nama_lengkap: u.nama_lengkap,
+            role: u.role ?? 'kasir',
+        });
+        inertiaRouter.visit('/dashboard');
+    } catch (err) {
+        errorMessage.value =
+            err?.errors?.username?.[0] ||
+            err?.message ||
+            'Login gagal. Periksa koneksi ke server.';
+    } finally {
         isLoading.value = false;
-        return;
     }
-    if (!found.is_active) {
-        errorMessage.value = `Akun "${found.username}" nonaktif. Hubungi admin.`;
-        isLoading.value = false;
-        return;
-    }
-    loginAsMockUser({
-        id_user: found.id_user,
-        username: found.username,
-        nama_lengkap: found.nama_lengkap,
-        role: ROLE_BY_ID[found.id_role] ?? 'kasir',
-    });
-    inertiaRouter.visit('/dashboard');
-    isLoading.value = false;
 };
 </script>

@@ -1,5 +1,6 @@
 <template>
-    <div class="space-y-4">
+    <RoleDenied v-if="!auth.can('/transaksi')" page="Transaksi" :needed="['Kasir']" />
+    <div v-else class="space-y-4">
     <div class="grid grid-cols-1 items-start gap-4 lg:grid-cols-12">
         <!-- KATALOG (tengah — klik-klik produk) -->
         <div class="space-y-4 lg:col-span-8">
@@ -88,56 +89,11 @@
         </div>
     </div>
 
-    <!-- RIWAYAT HARI INI (full-width di bawah — keranjang tidak lagi di bawahnya) -->
-    <div class="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-        <h2 class="text-sm font-bold">Riwayat Hari Ini ({{ riwayat.length }})</h2>
-        <div class="mt-3 space-y-2">
-            <div v-for="t in riwayat" :key="t.id_penjualan" class="rounded-lg border border-white/[0.05] bg-black/30">
-                <button @click="openId = openId === t.id_penjualan ? 0 : t.id_penjualan" class="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-xs">
-                    <span class="font-bold">#TRX-{{ String(t.id_penjualan).padStart(4, '0') }} • {{ store.namaPelanggan(t.id_pelanggan) }}</span>
-                    <span class="flex items-center gap-2">
-                        <span :class="t.status_pembayaran === 'sudah bayar' ? 'text-emerald-400' : 'text-amber-400'" class="text-[10px] font-bold">{{ t.status_pembayaran }}</span>
-                        <span class="font-black">{{ formatRupiah(t.total_faktur) }}</span>
-                    </span>
-                </button>
-                <div v-if="openId === t.id_penjualan" class="border-t border-white/[0.05] px-3 py-2 text-[11px] text-white/60">
-                    <p v-for="d in store.detailJual(t.id_penjualan)" :key="d.id_detail_penjualan" class="flex justify-between py-0.5">
-                        <span>{{ store.namaBarang(d.id_barang) }} × {{ d.jumlah_barang }} <span v-if="d.diskon_nilai" class="text-emerald-400">(-{{ d.diskon_nilai }}%)</span></span>
-                        <span class="font-bold text-white/90">{{ formatRupiah(d.subtotal) }}</span>
-                    </p>
-                    <p class="mt-1 flex justify-between border-t border-white/10 pt-1 text-white/80"><span>Bayar ({{ t.cara_bayar }}) • Kembali</span><span class="font-bold">{{ formatRupiah(t.total_bayar) }} • {{ formatRupiah(t.kembalian) }}</span></p>
-                    <button @click="cetakUlang(t)" class="mt-2 h-8 w-full rounded-lg bg-white/5 text-[11px] font-bold text-white/70 hover:bg-white/10">🖨️ Cetak Ulang Struk</button>
-                </div>
-            </div>
-            <p v-if="!riwayat.length" class="py-6 text-center text-xs text-white/30">Belum ada transaksi hari ini.</p>
-        </div>
-    </div>
-
-    <!-- RIWAYAT PENJUALAN SAYA (khusus kasir — transaksi miliknya, semua waktu) -->
-    <div v-if="auth.role.value === 'kasir'" class="rounded-xl border border-blue-500/20 bg-blue-500/[0.04] p-4">
-        <h2 class="text-sm font-bold">🧾 Riwayat Penjualan Saya <span class="text-white/30">({{ riwayatSaya.length }} terbaru)</span></h2>
-        <div class="mt-3 space-y-2">
-            <div v-for="t in riwayatSaya" :key="t.id_penjualan" class="rounded-lg border border-white/[0.05] bg-black/30">
-                <button @click="openId = openId === t.id_penjualan ? 0 : t.id_penjualan" class="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-xs">
-                    <span class="font-bold">#TRX-{{ String(t.id_penjualan).padStart(4, '0') }} • {{ store.namaPelanggan(t.id_pelanggan) }}</span>
-                    <span class="flex items-center gap-2">
-                        <span class="text-[10px] text-white/30">{{ formatDateTime(t.tanggal_penjualan) }}</span>
-                        <span :class="t.status_pembayaran === 'sudah bayar' ? 'text-emerald-400' : 'text-amber-400'" class="text-[10px] font-bold">{{ t.status_pembayaran }}</span>
-                        <span class="font-black">{{ formatRupiah(t.total_faktur) }}</span>
-                    </span>
-                </button>
-                <div v-if="openId === t.id_penjualan" class="border-t border-white/[0.05] px-3 py-2 text-[11px] text-white/60">
-                    <p v-for="d in store.detailJual(t.id_penjualan)" :key="d.id_detail_penjualan" class="flex justify-between py-0.5">
-                        <span>{{ store.namaBarang(d.id_barang) }} × {{ d.jumlah_barang }} <span v-if="d.diskon_nilai" class="text-emerald-400">(-{{ d.diskon_nilai }}%)</span></span>
-                        <span class="font-bold text-white/90">{{ formatRupiah(d.subtotal) }}</span>
-                    </p>
-                    <p class="mt-1 flex justify-between border-t border-white/10 pt-1 text-white/80"><span>Bayar ({{ t.cara_bayar }}) • Kembali</span><span class="font-bold">{{ formatRupiah(t.total_bayar) }} • {{ formatRupiah(t.kembalian) }}</span></p>
-                    <button @click="cetakUlang(t)" class="mt-2 h-8 w-full rounded-lg bg-white/5 text-[11px] font-bold text-white/70 hover:bg-white/10">🖨️ Cetak Ulang Struk</button>
-                </div>
-            </div>
-            <p v-if="!riwayatSaya.length" class="py-6 text-center text-xs text-white/30">Belum ada penjualan. Gas ke kasir! 🚀</p>
-        </div>
-    </div>
+    <!-- LINK KE RIWAYAT (pisah halaman) -->
+    <Link href="/riwayat-transaksi" class="flex items-center justify-between gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-xs transition-colors hover:border-emerald-500/40 hover:bg-emerald-500/[0.06]">
+        <span class="font-bold">🧾 Lihat Riwayat Transaksi <span class="font-normal text-white/40">— search, filter, cetak ulang & pembatalan ada di halaman tersendiri</span></span>
+        <span class="shrink-0 font-black text-emerald-400">Buka →</span>
+    </Link>
     </div>
 
     <!-- STRUK -->
@@ -165,10 +121,12 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue';
+import { Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
+import RoleDenied from '@/components/RoleDenied.vue';
 import { hydrate, usePosStore } from '@/composables/usePosStore';
 import { useAuthMock } from '@/composables/useAuthMock';
-import { dayKey, formatDateTime, formatRupiah, formatRupiahShort, todayKey } from '@/lib/format';
+import { formatDateTime, formatRupiah, formatRupiahShort } from '@/lib/format';
 
 defineOptions({ layout: DashboardLayout });
 const props = defineProps({ barang: Array, pelanggan: Array, penjualan: Array });
@@ -178,7 +136,7 @@ const auth = useAuthMock();
 
 const q = ref(''), katFilter = ref(0), cart = ref([]), idPelanggan = ref(null);
 const caraBayar = ref('Tunai'), jenis = ref('tunai'), bayar = ref(0);
-const err = ref(''), struk = ref(null), openId = ref(0);
+const err = ref(''), struk = ref(null);
 
 const filtered = computed(() => store.barangAktif.value.filter((b) => {
     const okQ = !q.value || b.nama.toLowerCase().includes(q.value.toLowerCase()) || b.barcode.includes(q.value);
@@ -191,12 +149,6 @@ const total = computed(() => cart.value.reduce((s, l) => s + lineSub(l), 0));
 const totalQty = computed(() => cart.value.reduce((s, l) => s + l.qty, 0));
 const totalDisc = computed(() => cart.value.reduce((s, l) => s + price(l.id_barang) * l.qty * ((l.diskon_persen || 0) / 100), 0));
 const kembalian = computed(() => (bayar.value || 0) - total.value);
-const riwayat = computed(() => store.penjualanAktif.value.filter((p) => dayKey(p.tanggal_penjualan) === todayKey()).sort((a, b) => b.id_penjualan - a.id_penjualan));
-/* Riwayat penjualan milik kasir yang login (semua waktu, 15 terbaru) */
-const riwayatSaya = computed(() => {
-    const myId = auth.user.value?.id_user ?? -1;
-    return store.penjualanAktif.value.filter((p) => p.id_user === myId).sort((a, b) => b.id_penjualan - a.id_penjualan).slice(0, 15);
-});
 
 function add(b) {
     const l = cart.value.find((x) => x.id_barang === b.id_barang);

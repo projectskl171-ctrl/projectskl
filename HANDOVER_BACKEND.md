@@ -43,6 +43,7 @@ Key props yang dikenali `hydrate()`: `barang`, `kategori`, `supplier`,
 | `saveSupplier` / `deleteSupplier` | `POST/PUT/DELETE /api/supplier` | sama |
 | `saveUser` / `toggleUser` | `POST/PUT /api/users`, `PATCH /api/users/{id}/toggle` | `password` → `Hash::make`, jangan kembalikan hash |
 | `createPenjualan` | `POST /api/penjualan` | **WAJIB `DB::transaction`**: insert header + details[], hitung ulang `subtotal`, cek & kurangi `stok`, tolak jika kurang |
+| `voidPenjualan` | `DELETE /api/penjualan/{id}` | `DB::transaction`: `is_delete=1`, kembalikan `stok += qty` (kasir: hanya miliknya hari ini; admin/super: semua) |
 | `createPembelian` | `POST /api/pembelian` | simpan sebagai `draft` |
 | `selesaikanPembelian` | `POST /api/pembelian/{id}/selesai` | `DB::transaction`: `status=selesai`, `stok += jumlah`, update `harga_beli` (HPP terakhir) |
 | `deletePembelian` | `DELETE /api/pembelian/{id}` | hanya boleh saat `draft` |
@@ -73,9 +74,12 @@ Frontend punya simulasi login di `composables/useAuthMock.ts` (localStorage
 `kasirku_role_v1`). Matriks akses ada di `MATRIX` + field `roles` per item di
 `DashboardSidebar.vue`. Aturan main (sesuai gambaran user):
 
-- **kasir** → Dashboard (1 dagang: shift saya), Transaksi, Pelanggan (**CRUD penuh**),
+- **kasir** → Dashboard, Transaksi, Riwayat Transaksi, Pelanggan (**CRUD penuh**),
   Notifikasi, Settings (profil + tampilan).
-- **admin** → 1 sekolah: + Pembelian, Produk, Supplier, Laporan, User (**khusus kelola kasir**).
+- **admin** → Dashboard, Produk, Pembelian, Supplier, User (**khusus kelola kasir**),
+  Laporan, Notifikasi. (Tanpa Transaksi / Riwayat Transaksi / Pelanggan / Sekolah / Settings.)
+- **super admin** → Dashboard, Sekolah (semua sekolah + toggle aktif), User, Laporan,
+  Notifikasi. (Tanpa kasir & operasional toko.)
 - **super admin** → semua sekolah: semua menu + ringkasan jaringan & tabel per-sekolah di Dashboard,
   kelola admin & kasir + panel kendali.
 

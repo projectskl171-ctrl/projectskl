@@ -51,7 +51,7 @@
                         <div v-for="b in stokList" :key="b.id_barang" class="flex items-center gap-3 rounded-lg border border-white/[0.05] bg-black/30 px-3 py-2.5 text-xs">
                             <span class="flex h-8 w-8 items-center justify-center rounded-md text-sm" :class="b.stok === 0 ? 'bg-rose-500/15' : 'bg-amber-500/15'">{{ b.stok === 0 ? '⛔' : '⚠️' }}</span>
                             <div class="min-w-0 flex-1"><p class="truncate font-bold">{{ b.nama }}</p><p class="text-[11px] text-white/40">{{ b.stok === 0 ? 'Habis total — segera buat pembelian' : `Sisa ${b.stok} ${b.satuan}` }}</p></div>
-                            <Link href="/pembelian" class="shrink-0 rounded-md bg-white/5 px-2 py-1 text-[11px] font-bold hover:bg-white/10">Restock →</Link>
+                            <Link v-if="auth.can('/pembelian')" href="/pembelian" class="shrink-0 rounded-md bg-white/5 px-2 py-1 text-[11px] font-bold hover:bg-white/10">Restock →</Link>
                         </div>
                         <p v-if="!stokList.length" class="py-4 text-center text-xs text-white/30">Semua stok aman. 🎉</p>
                     </div>
@@ -80,7 +80,7 @@
                         <div v-for="p in draft" :key="p.id_pembelian" class="flex items-center gap-3 rounded-lg border border-white/[0.05] bg-black/30 px-3 py-2.5 text-xs">
                             <div class="min-w-0 flex-1"><p class="truncate font-mono font-bold">{{ p.nomor_faktur }} • {{ store.namaSupplier(p.id_supplier) }}</p><p class="text-[11px] text-white/40">{{ formatDate(p.tanggal_faktur) }}</p></div>
                             <p class="shrink-0 font-black">{{ formatRupiah(p.total_bayar) }}</p>
-                            <Link href="/pembelian" class="shrink-0 rounded-md bg-white/5 px-2 py-1 text-[11px] font-bold hover:bg-white/10">Proses →</Link>
+                            <Link v-if="auth.can('/pembelian')" href="/pembelian" class="shrink-0 rounded-md bg-white/5 px-2 py-1 text-[11px] font-bold hover:bg-white/10">Proses →</Link>
                         </div>
                         <p v-if="!draft.length" class="py-4 text-center text-xs text-white/30">Tidak ada draft. ✅</p>
                     </div>

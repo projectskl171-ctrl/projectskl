@@ -90,6 +90,7 @@ export function hydrate(props: Partial<Record<string, any>>) {
         barang: 'barang', kategori: 'kategori', supplier: 'supplier',
         pelanggan: 'pelanggan', pembelian: 'pembelian', penjualan: 'penjualan',
         users: 'users', detailPenjualan: 'detailPenjualan', detailPembelian: 'detailPembelian',
+        sekolah: 'sekolah',
     };
     let touched = false;
     for (const [pk, sk] of Object.entries(map)) {
@@ -356,6 +357,18 @@ export function usePosStore() {
         if (p) p.is_delete = 1;
         persist();
     }
+    /** Batalkan/void penjualan: soft-delete + kembalikan stok.
+        Di BE: DELETE /api/penjualan/{id} (transaction: is_delete=1, stok += qty). */
+    function voidPenjualan(id: number) {
+        const p = state.penjualan.find((x) => x.id_penjualan === id);
+        if (!p || p.is_delete) return;
+        p.is_delete = 1;
+        for (const d of state.detailPenjualan.filter((x) => x.id_penjualan === id)) {
+            const b = state.barang.find((x) => x.id_barang === d.id_barang);
+            if (b) b.stok += d.jumlah_barang;
+        }
+        persist();
+    }
 
     return {
         state,
@@ -366,6 +379,6 @@ export function usePosStore() {
         jualHariIni, omzetHariIni, stokMenipis, piutang, omzet7Hari,
         saveBarang, deleteBarang, savePelanggan, deletePelanggan,
         saveSupplier, deleteSupplier, saveUser, toggleUser, saveSekolah, toggleSekolah,
-        createPenjualan, createPembelian, selesaikanPembelian, deletePembelian,
+        createPenjualan, voidPenjualan, createPembelian, selesaikanPembelian, deletePembelian,
     };
 }

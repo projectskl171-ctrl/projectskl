@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Controllers\AuthController;
+use App\Models\TbUser;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -35,12 +37,25 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $payload = null;
+
+        if ($user instanceof TbUser) {
+            $user->loadMissing(['role', 'sekolah']);
+            // Payload aman: tanpa password/hash. Dipakai sidebar + guard role di Vue.
+            $payload = AuthController::userPayload($user);
+        } elseif ($user) {
+            // Model auth lain (mis. akun starter-kit pada test): bagikan
+            // representasi aman minimal tanpa asumsi relasi tb_user.
+            $payload = collect($user->makeVisible([])->toArray())
+                ->except(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])
+                ->all();
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
-            'auth' => [
-                'user' => $request->user(),
-            ],
+            'auth' => ['user' => $payload],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

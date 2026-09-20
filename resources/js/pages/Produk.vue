@@ -1,5 +1,5 @@
 <template>
-    <RoleDenied v-if="!auth.can('/produk')" page="Produk" :needed="['Admin', 'Super Admin']" />
+    <RoleDenied v-if="!auth.can('/produk')" page="Produk" :needed="['Admin']" />
     <div v-else class="space-y-4">
         <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
             <div v-for="s in stats" :key="s.label" class="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">

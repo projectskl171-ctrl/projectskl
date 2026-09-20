@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\TbUser;
 use App\Models\User;
 
 return [
@@ -62,9 +63,17 @@ return [
     */
 
     'providers' => [
+        // Provider utama POS: tb_user (login username).
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', User::class),
+            'model' => env('AUTH_MODEL', TbUser::class),
+        ],
+
+        // Provider akun starter-kit (tabel users bawaan) — hanya dipakai
+        // broker reset password email Fortify, karena tb_user tidak punya email.
+        'fortify_users' => [
+            'driver' => 'eloquent',
+            'model' => env('FORTIFY_AUTH_MODEL', User::class),
         ],
 
         // 'users' => [
@@ -95,6 +104,13 @@ return [
     'passwords' => [
         'users' => [
             'provider' => 'users',
+            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        'fortify_users' => [
+            'provider' => 'fortify_users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
             'expire' => 60,
             'throttle' => 60,

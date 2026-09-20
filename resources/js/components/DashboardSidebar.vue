@@ -137,7 +137,7 @@
                 </button>
             </div>
             <Link
-                v-for="item in footerItems"
+                v-for="item in visibleFooter"
                 :key="item.href"
                 :href="item.href"
                 @click="item.action ? item.action($event) : null"
@@ -165,6 +165,7 @@
 import { computed, defineComponent, h, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { ROLE_COLOR, ROLE_LABEL, loginAs, logoutMock, useAuthMock } from '@/composables/useAuthMock';
+import { apiLogout } from '@/lib/api';
 
 const auth = useAuthMock();
 const quickRoles = ['kasir', 'admin', 'super admin'];
@@ -174,8 +175,10 @@ const gantiPeran = (r) => {
 };
 const keluar = (e) => {
     e.preventDefault();
-    logoutMock();
-    router.visit('/');
+    apiLogout().catch(() => {}).finally(() => {
+        logoutMock();
+        router.visit('/');
+    });
 };
 
 /* =========================================================
@@ -364,26 +367,40 @@ const IconLogout = makeIcon([
     'M16 17l5-5-5-5',
     'M21 12H9',
 ]);
+const IconSchool = makeIcon([
+    'M3 10l9-6 9 6',
+    'M5 10v10h14V10',
+    'M9 20v-6h6v6',
+]);
+const IconReceipt = makeIcon([
+    'M5 3h14v18l-2.3-1.5L14.4 21l-2.4-1.5L9.6 21l-2.3-1.5L5 21V3z',
+    'M9 8h6',
+    'M9 12h6',
+]);
 
 /* =========================================================
    NAV CONFIG — `roles` = peran yang boleh LIHAT menu ini.
-   kasir: jualan saja • admin: operasional • super admin: semua + user
+   kasir: Dashboard, Transaksi, Riwayat Transaksi, Pelanggan, Notifikasi, Settings.
+   admin: Dashboard, Produk, Pembelian, Supplier, User, Laporan, Notifikasi.
+   super admin: Dashboard, Sekolah, User, Laporan, Notifikasi.
    ========================================================= */
 const navGroups = [
     {
         label: 'Utama',
         items: [
             { label: 'Dashboard', href: '/dashboard', color: '#10b981', icon: IconGrid, roles: ['kasir', 'admin', 'super admin'] },
-            { label: 'Transaksi', href: '/transaksi', color: '#3b82f6', icon: IconCart, badge: 'Baru', roles: ['kasir', 'admin', 'super admin'] },
-            { label: 'Pembelian', href: '/pembelian', color: '#8b5cf6', icon: IconPackage, roles: ['admin', 'super admin'] },
+            { label: 'Transaksi', href: '/transaksi', color: '#3b82f6', icon: IconCart, badge: 'Baru', roles: ['kasir'] },
+            { label: 'Riwayat Transaksi', href: '/riwayat-transaksi', color: '#38bdf8', icon: IconReceipt, roles: ['kasir'] },
+            { label: 'Pembelian', href: '/pembelian', color: '#8b5cf6', icon: IconPackage, roles: ['admin'] },
         ],
     },
     {
         label: 'Master',
         items: [
-            { label: 'Produk', href: '/produk', color: '#f59e0b', icon: IconBox, roles: ['admin', 'super admin'] },
-            { label: 'Pelanggan', href: '/pelanggan', color: '#ec4899', icon: IconUsers, roles: ['kasir', 'admin', 'super admin'] },
-            { label: 'Supplier', href: '/supplier', color: '#14b8a6', icon: IconTruck, roles: ['admin', 'super admin'] },
+            { label: 'Produk', href: '/produk', color: '#f59e0b', icon: IconBox, roles: ['admin'] },
+            { label: 'Pelanggan', href: '/pelanggan', color: '#ec4899', icon: IconUsers, roles: ['kasir'] },
+            { label: 'Supplier', href: '/supplier', color: '#14b8a6', icon: IconTruck, roles: ['admin'] },
+            { label: 'Sekolah', href: '/sekolah', color: '#0ea5e9', icon: IconSchool, roles: ['super admin'] },
             { label: 'User', href: '/user', color: '#6366f1', icon: IconShield, roles: ['admin', 'super admin'] },
         ],
     },
@@ -404,9 +421,14 @@ const visibleGroups = computed(() =>
 );
 
 const footerItems = [
-    { label: 'Settings', href: '/settings', color: '#94a3b8', icon: IconSettings },
-    { label: 'Logout', href: '/', color: '#ef4444', icon: IconLogout, action: keluar },
+    { label: 'Settings', href: '/settings', color: '#94a3b8', icon: IconSettings, roles: ['kasir'] },
+    { label: 'Logout', href: '/', color: '#ef4444', icon: IconLogout, action: keluar, roles: ['kasir', 'admin', 'super admin'] },
 ];
+
+/* Footer difilter peran juga (admin tidak dapat Settings) */
+const visibleFooter = computed(() =>
+    footerItems.filter((i) => !i.roles || auth.can(i.href) || i.href === '/'),
+);
 
 /* =========================================================
    ACTIVE STATE
