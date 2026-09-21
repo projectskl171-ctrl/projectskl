@@ -4,17 +4,27 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        {{-- Inline script to detect system dark mode preference and apply it immediately --}}
+        {{-- Terapkan tema tersimpan SEBELUM render (anti-flash). Prioritas:
+             localStorage > cookie server > default dark KasirKu. --}}
         <script>
             (function() {
-                const appearance = '{{ $appearance ?? "system" }}';
-
-                if (appearance === 'system') {
-                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-                    if (prefersDark) {
-                        document.documentElement.classList.add('dark');
+                try {
+                    var saved = localStorage.getItem('appearance')
+                        || localStorage.getItem('site-theme')
+                        || localStorage.getItem('kasirku_theme_v1');
+                    var theme = saved || '{{ $appearance ?? "system" }}';
+                    if (theme === 'white' || theme === 'terang') theme = 'light';
+                    if (theme === 'gelap') theme = 'dark';
+                    if (theme === 'system') {
+                        theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
                     }
+                    if (theme !== 'light') {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                } catch (e) {
+                    document.documentElement.classList.add('dark');
                 }
             })();
         </script>

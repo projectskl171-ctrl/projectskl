@@ -1,10 +1,10 @@
 <template>
     <!-- ============ SIDEBAR (satu-satunya) ============ -->
     <aside
-        class="sticky top-0 z-30 flex h-dvh flex-col border-r border-white/[0.06] bg-[#0d0d0d]"
+        class="sticky top-0 z-30 flex h-dvh flex-col border-r border-slate-200 bg-white text-slate-900 dark:border-white/[0.06] dark:bg-[#0d0d0d] dark:text-white"
     >
         <!-- BRAND -->
-        <div class="flex h-16 shrink-0 items-center gap-3 border-b border-white/[0.06] px-5">
+        <div class="flex h-16 shrink-0 items-center gap-3 border-b border-slate-200 px-5 dark:border-white/[0.06]">
             <div
                 class="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500 text-white shadow-[0_0_0_1px_rgba(16,185,129,0.2),0_4px_12px_-2px_rgba(16,185,129,0.4)]"
             >
@@ -16,7 +16,7 @@
             </div>
             <div class="min-w-0">
                 <p class="truncate text-[13px] font-bold tracking-tight leading-none">KasirKu</p>
-                <p class="mt-1 truncate text-[10px] font-medium tracking-[0.14em] text-white/40 uppercase leading-none">
+                <p class="mt-1 truncate text-[10px] font-medium tracking-[0.14em] text-slate-400 uppercase leading-none dark:text-white/40">
                     POS System
                 </p>
             </div>
@@ -25,7 +25,7 @@
         <!-- NAV : relative = offsetParent buat sliding indicator -->
         <nav ref="navRef" class="relative flex-1 overflow-y-auto py-4">
             <!-- Badge peran aktif -->
-            <div class="mx-5 mb-3 flex items-center gap-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
+            <div class="mx-5 mb-3 flex items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 dark:border-white/[0.06] dark:bg-white/[0.02]">
                 <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[11px] font-black text-white"
                     :style="{ background: ROLE_COLOR[auth.role.value] }">
                     {{ auth.user.value?.inisial ?? '?' }}
@@ -36,7 +36,7 @@
                 </div>
             </div>
             <template v-for="group in visibleGroups" :key="group.label">
-                <p class="mt-1 mb-2 px-5 text-[10px] font-bold tracking-[0.14em] text-white/30 uppercase">
+                <p class="mt-1 mb-2 px-5 text-[10px] font-bold tracking-[0.14em] text-slate-400 uppercase dark:text-white/30">
                     {{ group.label }}
                 </p>
                 <div class="mb-4 space-y-0">
@@ -46,7 +46,7 @@
                         :href="item.href"
                         :data-href="item.href"
                         class="group relative flex h-9 w-full items-center gap-3 overflow-hidden px-5 text-[13px] font-medium transition-colors duration-150 ease-in"
-                        :class="isActive(item.href) ? 'text-white' : 'text-white/55 hover:text-white'"
+                        :class="isActive(item.href) ? 'text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-900 dark:text-white/55 dark:hover:text-white'"
                     >
                         <!-- ===== ACTIVE BG : gradient + canvas particle random ===== -->
                         <span
@@ -100,7 +100,7 @@
                         <span class="relative z-10 flex-1 truncate">{{ item.label }}</span>
                         <span
                             v-if="item.badge"
-                            class="relative z-10 rounded-md bg-white/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wide"
+                            class="relative z-10 rounded-md bg-slate-900/[0.06] px-1.5 py-0.5 text-[9px] font-bold tracking-wide dark:bg-white/10"
                         >
                             {{ item.badge }}
                         </span>
@@ -124,24 +124,13 @@
         </nav>
 
         <!-- FOOTER ACTIONS -->
-        <div class="shrink-0 space-y-0 border-t border-white/[0.06] py-3">
-            <!-- Ganti peran (demo frontend — backend nanti jadi halaman profil) -->
-            <div class="flex gap-1.5 px-5 pb-2">
-                <button v-for="r in quickRoles" :key="r"
-                    @click="gantiPeran(r)"
-                    class="h-7 flex-1 rounded-md text-[10px] font-black transition-all hover:brightness-125"
-                    :class="auth.role.value === r ? 'text-white ring-1 ring-white/30' : 'text-white/45 bg-white/[0.04]'"
-                    :style="auth.role.value === r ? { background: ROLE_COLOR[r] } : {}"
-                    :title="'Masuk sebagai ' + ROLE_LABEL[r]">
-                    {{ ROLE_LABEL[r].split(' ')[0].toUpperCase() }}
-                </button>
-            </div>
+        <div class="shrink-0 space-y-0 border-t border-slate-200 py-3 dark:border-white/[0.06]">
             <Link
                 v-for="item in visibleFooter"
                 :key="item.href"
                 :href="item.href"
                 @click="item.action ? item.action($event) : null"
-                class="group relative flex h-9 w-full items-center gap-3 overflow-hidden px-5 text-[13px] font-medium text-white/55 transition-colors duration-150 ease-in hover:text-white"
+                class="group relative flex h-9 w-full items-center gap-3 overflow-hidden px-5 text-[13px] font-medium text-slate-500 transition-colors duration-150 ease-in hover:text-slate-900 dark:text-white/55 dark:hover:text-white"
             >
                 <span
                     class="pointer-events-none absolute inset-0 origin-left scale-x-0 overflow-hidden transition-transform duration-300 ease-in group-hover:scale-x-100"
@@ -164,15 +153,10 @@
 <script setup>
 import { computed, defineComponent, h, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { ROLE_COLOR, ROLE_LABEL, loginAs, logoutMock, useAuthMock } from '@/composables/useAuthMock';
+import { ROLE_COLOR, logoutMock, useAuthMock } from '@/composables/useAuthMock';
 import { apiLogout } from '@/lib/api';
 
 const auth = useAuthMock();
-const quickRoles = ['kasir', 'admin', 'super admin'];
-const gantiPeran = (r) => {
-    loginAs(r);
-    router.visit('/dashboard');
-};
 const keluar = (e) => {
     e.preventDefault();
     apiLogout().catch(() => {}).finally(() => {
@@ -266,10 +250,11 @@ const ParticleCanvas = defineComponent({
                     if (p.y < 0) { p.y = 0; p.vy *= -1; }
                     if (p.y > hgt) { p.y = hgt; p.vy *= -1; }
                     const a = Math.max(0, Math.min(1, p.base + Math.sin(t * p.speed + p.phase) * p.amp));
+                    const lightMode = typeof document !== 'undefined' && !document.documentElement.classList.contains('dark');
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
                     ctx.fillStyle = p.white
-                        ? `rgba(255,255,255,${a})`
+                        ? (lightMode ? `rgba(100,116,139,${a * 0.7})` : `rgba(255,255,255,${a})`)
                         : `rgba(${r},${g},${b},${a})`;
                     ctx.fill();
                 }

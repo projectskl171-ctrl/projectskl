@@ -7,6 +7,7 @@
    Selama BE belum jadi, peran disimpan di localStorage 'kasirku_role_v1'.
    ===================================================================== */
 import { computed, reactive } from 'vue';
+import { apiFetch } from '@/lib/api';
 
 export type MockRole = 'kasir' | 'admin' | 'super admin';
 
@@ -102,6 +103,35 @@ export function loginAsMockUser(u: { id_user: number; username: string; nama_len
         localStorage.setItem(LS_KEY, JSON.stringify(state.user));
     } catch { /* abaikan */ }
     return state.user;
+}
+
+/**
+ * Sinkron state peran frontend dengan SESSION server (/api/auth/me).
+ * Ini sumber kebenaran: memperbaiki localStorage basi (mis. peran lama
+ * dari login sebelumnya / tab lain) yang membuat sidebar menampilkan menu
+ * yang sesungguhnya ditolak backend (mental ke dashboard).
+ * @returns 'ok' | 'unauthorized' | 'offline'
+ */
+export async function syncAuthFromServer(): Promise<'ok' | 'unauthorized' | 'offline'> {
+    boot();
+    try {
+        const me = await apiFetch<{ data: any }>('/api/auth/me');
+        const u = me?.data;
+        if (!u || !u.id_user || !ACCOUNTS[u.role as MockRole]) return 'unauthorized';
+        loginAsMockUser({
+            id_user: u.id_user,
+            username: u.username,
+            nama_lengkap: u.nama_lengkap,
+            role: u.role as MockRole,
+        });
+        return 'ok';
+    } catch (err: any) {
+        if (err?.status === 401) {
+            logoutMock();
+            return 'unauthorized';
+        }
+        return 'offline'; // jaringan mati: pertahankan state lama, jangan logout paksa
+    }
 }
 
 /** Update nama & username user yang sedang login (dipakai Settings → Profil).

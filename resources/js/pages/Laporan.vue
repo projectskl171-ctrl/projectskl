@@ -1,86 +1,86 @@
 <template>
     <RoleDenied v-if="!auth.can('/laporan')" page="Laporan" :needed="['Admin', 'Super Admin']" />
     <div v-else class="space-y-4">
-        <div class="flex flex-col gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 sm:flex-row sm:items-center">
+        <div class="flex flex-col gap-2 rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-4 sm:flex-row sm:items-center">
             <div class="flex gap-1.5">
                 <button v-for="r in ranges" :key="r.key" @click="range = r.key"
-                    :class="range === r.key ? 'bg-orange-500 text-white' : 'bg-white/5 text-white/50 hover:bg-white/10'"
+                    :class="range === r.key ? 'bg-orange-500 text-white' : 'bg-slate-900/[0.04] dark:bg-white/5 text-slate-500 dark:text-white/50 hover:bg-slate-900/5 dark:hover:bg-white/10'"
                     class="h-9 rounded-lg px-3 text-xs font-black">{{ r.label }}</button>
             </div>
-            <select v-model="fCara" class="h-9 rounded-lg border border-white/[0.08] bg-black/40 px-3 text-xs outline-none">
+            <select v-model="fCara" class="h-9 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-black/40 px-3 text-xs outline-none">
                 <option value="">Semua cara bayar</option><option>Tunai</option><option>QRIS</option><option>Transfer</option><option>Tempo</option>
             </select>
-            <select v-model="fJenis" class="h-9 rounded-lg border border-white/[0.08] bg-black/40 px-3 text-xs outline-none">
+            <select v-model="fJenis" class="h-9 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-black/40 px-3 text-xs outline-none">
                 <option value="">Tunai + Kredit</option><option value="tunai">Tunai saja</option><option value="kredit">Kredit saja</option>
             </select>
-            <button @click="exportCsv" class="h-9 rounded-lg bg-white/5 px-4 text-xs font-black text-white/70 hover:bg-white/10 sm:ml-auto">⬇ Export CSV</button>
+            <button @click="exportCsv" class="h-9 rounded-lg bg-slate-900/[0.04] dark:bg-white/5 px-4 text-xs font-black text-slate-600 dark:text-white/70 hover:bg-slate-900/5 dark:hover:bg-white/10 sm:ml-auto">⬇ Export CSV</button>
         </div>
 
         <div class="grid grid-cols-2 gap-4 xl:grid-cols-5">
-            <div v-for="s in summary" :key="s.label" class="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-                <p class="text-[11px] text-white/40">{{ s.label }}</p>
+            <div v-for="s in summary" :key="s.label" class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-4">
+                <p class="text-[11px] text-slate-500 dark:text-white/40">{{ s.label }}</p>
                 <p class="mt-1 text-lg font-black" :style="s.color ? { color: s.color } : {}">{{ s.value }}</p>
-                <p class="mt-0.5 text-[10px] text-white/30">{{ s.sub }}</p>
+                <p class="mt-0.5 text-[10px] text-slate-400 dark:text-white/30">{{ s.sub }}</p>
             </div>
         </div>
 
         <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
-            <div class="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 xl:col-span-2">
+            <div class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 xl:col-span-2">
                 <h2 class="text-sm font-bold">Omzet vs Laba Harian</h2>
-                <p class="mt-0.5 text-[11px] text-white/40">laba = total_faktur − Σ(harga_beli × qty) dari tb_detail_penjualan</p>
+                <p class="mt-0.5 text-[11px] text-slate-500 dark:text-white/40">laba = total_faktur − Σ(harga_beli × qty) dari tb_detail_penjualan</p>
                 <div class="mt-5 flex h-48 items-end gap-2">
                     <div v-for="d in daily" :key="d.key" class="flex flex-1 flex-col items-center gap-1">
                         <div class="flex w-full flex-1 items-end gap-1">
                             <div class="flex-1 rounded-t bg-gradient-to-t from-orange-600/40 to-orange-400/90" :style="{ height: pct(d.omzet, maxOmzet) + '%' }" :title="'Omzet ' + formatRupiah(d.omzet)"></div>
                             <div class="flex-1 rounded-t bg-gradient-to-t from-emerald-600/40 to-emerald-400/90" :style="{ height: pct(d.laba, maxOmzet) + '%' }" :title="'Laba ' + formatRupiah(d.laba)"></div>
                         </div>
-                        <span class="text-[9px] font-bold text-white/30">{{ d.label }}</span>
+                        <span class="text-[9px] font-bold text-slate-400 dark:text-white/30">{{ d.label }}</span>
                     </div>
                 </div>
-                <div class="mt-3 flex gap-4 text-[11px] text-white/50">
+                <div class="mt-3 flex gap-4 text-[11px] text-slate-500 dark:text-white/50">
                     <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-orange-400"></span>Omzet</span>
                     <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-400"></span>Laba kotor</span>
                 </div>
             </div>
-            <div class="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
+            <div class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5">
                 <h2 class="text-sm font-bold">Cara Bayar</h2>
                 <div class="mt-4 space-y-3">
                     <div v-for="c in byCara" :key="c.cara">
-                        <div class="flex justify-between text-xs"><span class="font-bold">{{ c.cara }}</span><span class="text-white/50">{{ c.count }} trx • {{ formatRupiahShort(c.total) }}</span></div>
-                        <div class="mt-1 h-2 overflow-hidden rounded-full bg-white/5"><div class="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-400" :style="{ width: (c.total / Math.max(1, maxCara)) * 100 + '%' }"></div></div>
+                        <div class="flex justify-between text-xs"><span class="font-bold">{{ c.cara }}</span><span class="text-slate-500 dark:text-white/50">{{ c.count }} trx • {{ formatRupiahShort(c.total) }}</span></div>
+                        <div class="mt-1 h-2 overflow-hidden rounded-full bg-slate-900/[0.04] dark:bg-white/5"><div class="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-400" :style="{ width: (c.total / Math.max(1, maxCara)) * 100 + '%' }"></div></div>
                     </div>
-                    <p v-if="!byCara.length" class="text-xs text-white/30">Tidak ada data.</p>
+                    <p v-if="!byCara.length" class="text-xs text-slate-400 dark:text-white/30">Tidak ada data.</p>
                 </div>
                 <h2 class="mt-6 text-sm font-bold">Top Produk</h2>
                 <div class="mt-2 space-y-2">
                     <div v-for="(t, i) in topProduk.slice(0, 5)" :key="t.id" class="flex items-center gap-2.5 text-xs">
-                        <span class="w-5 text-center font-black text-white/25">{{ i + 1 }}</span>
+                        <span class="w-5 text-center font-black text-slate-400 dark:text-white/25">{{ i + 1 }}</span>
                         <span class="flex-1 truncate font-bold">{{ t.nama }}</span>
-                        <span class="text-white/40">{{ t.qty }} terjual</span>
-                        <span class="font-black text-emerald-400">{{ formatRupiahShort(t.omzet) }}</span>
+                        <span class="text-slate-500 dark:text-white/40">{{ t.qty }} terjual</span>
+                        <span class="font-black text-emerald-700 dark:text-emerald-400">{{ formatRupiahShort(t.omzet) }}</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="overflow-x-auto rounded-xl border border-white/[0.06]">
+        <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-white/[0.06]">
             <table class="w-full min-w-[760px] text-left text-xs">
-                <thead><tr class="bg-white/[0.03] text-[10px] tracking-wider text-white/40 uppercase">
+                <thead><tr class="bg-white dark:bg-white/[0.03] text-[10px] tracking-wider text-slate-500 dark:text-white/40 uppercase">
                     <th class="px-4 py-2.5">ID / Tanggal</th><th class="px-3 py-2.5">Pelanggan</th><th class="px-3 py-2.5">Bayar</th><th class="px-3 py-2.5 text-right">Omzet</th><th class="px-3 py-2.5 text-right">HPP</th><th class="px-3 py-2.5 text-right">Laba</th><th class="px-3 py-2.5 text-right">Status</th>
                 </tr></thead>
                 <tbody>
-                    <tr v-for="t in filtered" :key="t.id_penjualan" class="border-t border-white/[0.05] hover:bg-white/[0.02]">
-                        <td class="px-4 py-2.5"><p class="font-black">#TRX-{{ String(t.id_penjualan).padStart(4, '0') }}</p><p class="text-[10px] text-white/30">{{ formatDateTime(t.tanggal_penjualan) }}</p></td>
-                        <td class="px-3 py-2.5 text-white/60">{{ store.namaPelanggan(t.id_pelanggan) }}</td>
-                        <td class="px-3 py-2.5 text-white/60">{{ t.cara_bayar }} • {{ t.jenis_transaksi }}</td>
+                    <tr v-for="t in filtered" :key="t.id_penjualan" class="border-t border-slate-200 dark:border-white/[0.05] hover:bg-emerald-600/5 dark:hover:bg-white/[0.02]">
+                        <td class="px-4 py-2.5"><p class="font-black">#TRX-{{ String(t.id_penjualan).padStart(4, '0') }}</p><p class="text-[10px] text-slate-400 dark:text-white/30">{{ formatDateTime(t.tanggal_penjualan) }}</p></td>
+                        <td class="px-3 py-2.5 text-slate-600 dark:text-white/60">{{ store.namaPelanggan(t.id_pelanggan) }}</td>
+                        <td class="px-3 py-2.5 text-slate-600 dark:text-white/60">{{ t.cara_bayar }} • {{ t.jenis_transaksi }}</td>
                         <td class="px-3 py-2.5 text-right font-bold">{{ formatRupiah(t.total_faktur) }}</td>
-                        <td class="px-3 py-2.5 text-right text-white/40">{{ formatRupiah(hpp(t.id_penjualan)) }}</td>
-                        <td class="px-3 py-2.5 text-right font-bold text-emerald-400">{{ formatRupiah(t.total_faktur - hpp(t.id_penjualan)) }}</td>
-                        <td class="px-3 py-2.5 text-right"><span class="rounded px-1.5 py-0.5 text-[10px] font-black" :class="t.status_pembayaran === 'sudah bayar' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-300'">{{ t.status_pembayaran }}</span></td>
+                        <td class="px-3 py-2.5 text-right text-slate-500 dark:text-white/40">{{ formatRupiah(hpp(t.id_penjualan)) }}</td>
+                        <td class="px-3 py-2.5 text-right font-bold text-emerald-700 dark:text-emerald-400">{{ formatRupiah(t.total_faktur - hpp(t.id_penjualan)) }}</td>
+                        <td class="px-3 py-2.5 text-right"><span class="rounded px-1.5 py-0.5 text-[10px] font-black" :class="t.status_pembayaran === 'sudah bayar' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'">{{ t.status_pembayaran }}</span></td>
                     </tr>
                 </tbody>
             </table>
-            <p v-if="!filtered.length" class="py-10 text-center text-sm text-white/30">Tidak ada transaksi pada rentang ini.</p>
+            <p v-if="!filtered.length" class="py-10 text-center text-sm text-slate-400 dark:text-white/30">Tidak ada transaksi pada rentang ini.</p>
         </div>
     </div>
 </template>

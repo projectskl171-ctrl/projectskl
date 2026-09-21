@@ -70,14 +70,43 @@ const handleSystemThemeChange = () => {
     updateTheme(currentAppearance || 'system');
 };
 
+/** Kunci tunggal tema KasirKu. Bertahan di localStorage walau browser ditutup. */
+export const THEME_KEY = 'appearance';
+
+type SimpleTheme = 'light' | 'dark';
+
+/** Migrasi sekali dari kunci lama (site-theme / kasirku_theme_v1). */
+function migrateLegacyTheme(): SimpleTheme | null {
+    if (typeof window === 'undefined') {
+        return null;
+    }
+
+    try {
+        const legacy =
+            localStorage.getItem('site-theme') ||
+            localStorage.getItem('kasirku_theme_v1');
+        if (legacy === 'white' || legacy === 'terang' || legacy === 'light')
+            return 'light';
+        if (legacy === 'dark' || legacy === 'gelap') return 'dark';
+    } catch {
+        /* abaikan */
+    }
+
+    return null;
+}
+
+export function getSavedTheme(): Appearance {
+    return getStoredAppearance() ?? migrateLegacyTheme() ?? 'dark';
+}
+
 export function initializeTheme(): void {
     if (typeof window === 'undefined') {
         return;
     }
 
-    // Initialize theme from saved preference or default to system...
-    const savedAppearance = getStoredAppearance();
-    updateTheme(savedAppearance || 'system');
+    // Default KasirKu = dark agar stabil di semua OS; pilihan user
+    // (light/dark/system) diingat permanen via localStorage + cookie.
+    updateTheme(getSavedTheme());
 
     // Set up system theme change listener...
     mediaQuery()?.addEventListener('change', handleSystemThemeChange);
@@ -87,13 +116,7 @@ const appearance = ref<Appearance>('system');
 
 export function useAppearance(): UseAppearanceReturn {
     onMounted(() => {
-        const savedAppearance = localStorage.getItem(
-            'appearance',
-        ) as Appearance | null;
-
-        if (savedAppearance) {
-            appearance.value = savedAppearance;
-        }
+        appearance.value = getSavedTheme();
     });
 
     const resolvedAppearance = computed<ResolvedAppearance>(() => {

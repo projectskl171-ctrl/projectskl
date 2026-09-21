@@ -167,6 +167,9 @@
         @apply border-border outline-ring/50;
     }
     html {
+        color-scheme: light;
+    }
+    html.dark {
         color-scheme: dark;
     }
     body {
@@ -174,11 +177,13 @@
     }
 }
 
-/* ============ OPTION DARK GLOBAL (dropdown native) ============
-   List dropdown <option> dirender browser/OS — tanpa ini teksnya
-   hitam di atas putih padahal app dark mode. Satu aturan global,
-   berlaku untuk semua <select> di semua halaman & role. */
+/* ============ OPTION GLOBAL (dropdown native) — sadar tema ============
+   List dropdown <option> dirender browser/OS. */
 select option {
+    background-color: #ffffff;
+    color: #0f172a;
+}
+.dark select option {
     background-color: #111111;
     color: #ffffff;
 }
@@ -196,12 +201,14 @@ input[type='number'] {
     appearance: textfield;
 }
 
-/* ============ SCROLLBAR GELAP GLOBAL (KasirKu dark theme) ============
-   Tanpa ini, browser merender scrollbar putih bawaan yang "rese"
-   di atas background #0a0a0a. Berlaku untuk window + semua panel
-   overflow (sidebar nav, keranjang, modal, tabel). */
+/* ============ SCROLLBAR GLOBAL (KasirKu) — sadar tema ============
+   Berlaku untuk window + semua panel overflow
+   (sidebar nav, keranjang, modal, tabel). */
 * {
     scrollbar-width: thin;
+    scrollbar-color: rgba(15, 23, 42, 0.22) transparent;
+}
+.dark * {
     scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
 }
 *::-webkit-scrollbar {
@@ -212,12 +219,23 @@ input[type='number'] {
     background: transparent;
 }
 *::-webkit-scrollbar-thumb {
+    background: rgba(15, 23, 42, 0.2);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+.dark *::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.14);
     border-radius: 9999px;
     border: 2px solid transparent;
     background-clip: content-box;
 }
 *::-webkit-scrollbar-thumb:hover {
+    background: rgba(15, 23, 42, 0.34);
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+.dark *::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.28);
     border: 2px solid transparent;
     background-clip: content-box;

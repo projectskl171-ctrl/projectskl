@@ -1,12 +1,12 @@
 <template>
     <div class="space-y-5">
         <!-- Banner peran -->
-        <div class="flex flex-wrap items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
+        <div class="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] px-4 py-3">
             <div class="flex h-10 w-10 items-center justify-center rounded-lg text-sm font-black text-white"
                 :style="{ background: ROLE_COLOR[auth.role.value] }">{{ auth.user.value?.inisial }}</div>
             <div class="min-w-0 flex-1">
                 <p class="text-sm font-black">Halo, {{ auth.user.value?.nama_lengkap }}! 👋</p>
-                <p class="text-[11px] text-white/40">{{ roleDesc }}</p>
+                <p class="text-[11px] text-slate-500 dark:text-white/40">{{ roleDesc }}</p>
             </div>
             <span class="rounded-md px-2 py-1 text-[10px] font-black tracking-widest uppercase"
                 :style="{ background: hexA(ROLE_COLOR[auth.role.value], 0.15), color: ROLE_COLOR[auth.role.value] }">
@@ -16,12 +16,12 @@
 
         <!-- ============ KASIR : 1 dagang di 1 sekolah, fokus jualan ============ -->
         <template v-if="auth.role.value === 'kasir'">
-            <div class="rounded-xl border border-blue-500/20 bg-blue-500/[0.05] px-4 py-2.5 text-[11px] text-white/60">
+            <div class="rounded-xl border border-blue-500/20 bg-blue-500/[0.05] px-4 py-2.5 text-[11px] text-slate-600 dark:text-white/60">
                 🏪 <b>Dagang:</b> Kasir 01 • <b>{{ store.namaSekolah(1) }}</b> — datamu hanya mencakup transaksi & pelanggan dagang ini.
             </div>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div v-for="s in kasirStats" :key="s.label" class="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
-                    <p class="text-[11px] text-white/40">{{ s.label }}</p>
+                <div v-for="s in kasirStats" :key="s.label" class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5">
+                    <p class="text-[11px] text-slate-500 dark:text-white/40">{{ s.label }}</p>
                     <p class="mt-1 text-2xl font-black">{{ s.value }}</p>
                     <p class="mt-0.5 text-[11px]" :style="{ color: s.color }">{{ s.sub }}</p>
                 </div>
@@ -29,24 +29,24 @@
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Link href="/transaksi" class="group flex items-center gap-4 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.07] p-5 transition-all hover:bg-emerald-500/[0.12]">
                     <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500 text-xl">🧾</div>
-                    <div><p class="font-black">Buka Kasir</p><p class="text-xs text-white/40">Mulai transaksi penjualan baru</p></div>
+                    <div><p class="font-black">Buka Kasir</p><p class="text-xs text-slate-500 dark:text-white/40">Mulai transaksi penjualan baru</p></div>
                 </Link>
-                <Link href="/pelanggan" class="group flex items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 transition-all hover:bg-white/[0.04]">
+                <Link href="/pelanggan" class="group flex items-center gap-4 rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 transition-all hover:bg-emerald-600/5 dark:hover:bg-white/[0.04]">
                     <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-pink-500/15 text-xl">👥</div>
-                    <div><p class="font-black">Data Pelanggan</p><p class="text-xs text-white/40">Kelola pelanggan daganganmu (tambah / edit / hapus)</p></div>
+                    <div><p class="font-black">Data Pelanggan</p><p class="text-xs text-slate-500 dark:text-white/40">Kelola pelanggan daganganmu (tambah / edit / hapus)</p></div>
                 </Link>
             </div>
-            <div class="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
+            <div class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5">
                 <div class="flex items-center justify-between">
                     <h2 class="text-sm font-bold">Transaksi Shift Saya ({{ myToday.length }})</h2>
-                    <Link href="/riwayat-transaksi" class="text-[11px] font-bold text-emerald-400 hover:text-emerald-300">Riwayat lengkap →</Link>
+                    <Link href="/riwayat-transaksi" class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:text-emerald-300">Riwayat lengkap →</Link>
                 </div>
                 <div class="mt-3 space-y-2">
-                    <div v-for="t in myToday.slice(0, 6)" :key="t.id_penjualan" class="flex items-center justify-between rounded-lg border border-white/[0.05] bg-black/30 px-3 py-2.5 text-xs">
+                    <div v-for="t in myToday.slice(0, 6)" :key="t.id_penjualan" class="flex items-center justify-between rounded-lg border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-black/30 px-3 py-2.5 text-xs">
                         <span class="font-bold">#TRX-{{ String(t.id_penjualan).padStart(4, '0') }} • {{ store.namaPelanggan(t.id_pelanggan) }}</span>
-                        <span class="font-black text-emerald-400">{{ formatRupiah(t.total_faktur) }}</span>
+                        <span class="font-black text-emerald-700 dark:text-emerald-400">{{ formatRupiah(t.total_faktur) }}</span>
                     </div>
-                    <p v-if="!myToday.length" class="py-6 text-center text-xs text-white/30">Belum ada transaksi. Gas ke kasir! 🚀</p>
+                    <p v-if="!myToday.length" class="py-6 text-center text-xs text-slate-400 dark:text-white/30">Belum ada transaksi. Gas ke kasir! 🚀</p>
                 </div>
             </div>
         </template>
@@ -54,12 +54,12 @@
         <!-- ============ ADMIN (1 sekolah) & SUPER ADMIN (semua sekolah) ============ -->
         <template v-else>
             <!-- Konteks scope -->
-            <div v-if="auth.role.value === 'admin'" class="rounded-xl border border-violet-500/20 bg-violet-500/[0.05] px-4 py-2.5 text-[11px] text-white/60">
+            <div v-if="auth.role.value === 'admin'" class="rounded-xl border border-violet-500/20 bg-violet-500/[0.05] px-4 py-2.5 text-[11px] text-slate-600 dark:text-white/60">
                 🏫 <b>Scope:</b> 1 sekolah — <b>{{ store.namaSekolah(1) }}</b>. Semua angka di bawah hanya mencakup sekolah ini.
             </div>
             <div v-else class="flex flex-col gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.05] px-4 py-3 sm:flex-row sm:items-center">
-                <p class="flex-1 text-[11px] text-white/60">🌐 <b>Scope:</b> semua sekolah aktif ({{ store.sekolahAktif.value.length }}). Pilih scope untuk memfilter angka operasional:</p>
-                <select v-model.number="scopeSekolah" class="h-9 rounded-lg border border-white/[0.08] bg-black/40 px-3 text-xs font-bold outline-none">
+                <p class="flex-1 text-[11px] text-slate-600 dark:text-white/60">🌐 <b>Scope:</b> semua sekolah aktif ({{ store.sekolahAktif.value.length }}). Pilih scope untuk memfilter angka operasional:</p>
+                <select v-model.number="scopeSekolah" class="h-9 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-black/40 px-3 text-xs font-bold outline-none">
                     <option :value="0">Semua sekolah</option>
                     <option v-for="s in store.sekolahAktif.value" :key="s.id_sekolah" :value="s.id_sekolah">{{ s.nama_sekolah }}</option>
                 </select>
@@ -67,13 +67,13 @@
 
             <div v-if="auth.role.value === 'super admin'" class="rounded-xl border border-amber-500/20 bg-amber-500/[0.06] p-4">
                 <div class="flex items-center justify-between gap-3">
-                    <p class="text-[11px] font-black uppercase tracking-[0.18em] text-amber-300">Status sekolah</p>
+                    <p class="text-[11px] font-black uppercase tracking-[0.18em] text-amber-700 dark:text-amber-300">Status sekolah</p>
                     <span class="rounded-md bg-amber-500/15 px-2 py-1 text-[10px] font-black text-amber-200">{{ store.sekolahBelumBayar.value.length }} menunggak</span>
                 </div>
                 <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    <div v-for="s in store.sekolahBelumBayar.value" :key="s.id_sekolah" class="rounded-lg border border-amber-500/20 bg-black/20 px-3 py-2 text-xs text-white/70">
-                        <p class="font-black text-white">{{ s.nama_sekolah }}</p>
-                        <p class="mt-1 text-[10px] text-white/45">{{ s.kode_sekolah }} • terakhir bayar: {{ s.bulan_terakhir_bayar || '—' }}</p>
+                    <div v-for="s in store.sekolahBelumBayar.value" :key="s.id_sekolah" class="rounded-lg border border-amber-500/20 bg-white dark:bg-black/20 px-3 py-2 text-xs text-slate-600 dark:text-white/70">
+                        <p class="font-black text-slate-900 dark:text-white">{{ s.nama_sekolah }}</p>
+                        <p class="mt-1 text-[10px] text-slate-500 dark:text-white/45">{{ s.kode_sekolah }} • terakhir bayar: {{ s.bulan_terakhir_bayar || '—' }}</p>
                     </div>
                     <div v-if="!store.sekolahBelumBayar.value.length" class="rounded-lg border border-emerald-500/15 bg-emerald-500/[0.06] px-3 py-2 text-xs text-emerald-200">
                         Semua sekolah sudah bayar bulan ini. Status aman.
@@ -84,28 +84,28 @@
             <!-- Khusus super admin: ringkasan jaringan -->
             <template v-if="auth.role.value === 'super admin'">
                 <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
-                    <div v-for="s in netStats" :key="s.label" class="relative overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
+                    <div v-for="s in netStats" :key="s.label" class="relative overflow-hidden rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5">
                         <div class="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full blur-3xl" :style="{ background: hexA(s.color, 0.18) }" />
                         <div class="relative">
                             <p class="text-2xl font-bold tracking-tight">{{ s.value }}</p>
-                            <p class="mt-1 text-xs text-white/40">{{ s.label }}</p>
+                            <p class="mt-1 text-xs text-slate-500 dark:text-white/40">{{ s.label }}</p>
                             <p class="mt-0.5 text-[10px] font-bold" :style="{ color: s.color }">{{ s.sub }}</p>
                         </div>
                     </div>
                 </div>
-                <div class="overflow-x-auto rounded-xl border border-white/[0.06]">
+                <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-white/[0.06]">
                     <table class="w-full min-w-[720px] text-left text-xs">
-                        <thead><tr class="bg-white/[0.03] text-[10px] tracking-wider text-white/40 uppercase">
+                        <thead><tr class="bg-white dark:bg-white/[0.03] text-[10px] tracking-wider text-slate-500 dark:text-white/40 uppercase">
                             <th class="px-4 py-2.5">Sekolah</th><th class="px-3 py-2.5 text-right">Admin</th><th class="px-3 py-2.5 text-right">Kasir</th><th class="px-3 py-2.5 text-right">SKU</th><th class="px-3 py-2.5 text-right">Trx Hari Ini</th><th class="px-3 py-2.5 text-right">Omzet Hari Ini</th>
                         </tr></thead>
                         <tbody>
-                            <tr v-for="r in perSekolah" :key="r.id" class="border-t border-white/[0.05] hover:bg-white/[0.02]">
-                                <td class="px-4 py-2.5"><p class="font-bold">{{ r.nama }}</p><p class="font-mono text-[10px] text-white/30">{{ r.kode }}</p></td>
+                            <tr v-for="r in perSekolah" :key="r.id" class="border-t border-slate-200 dark:border-white/[0.05] hover:bg-emerald-600/5 dark:hover:bg-white/[0.02]">
+                                <td class="px-4 py-2.5"><p class="font-bold">{{ r.nama }}</p><p class="font-mono text-[10px] text-slate-400 dark:text-white/30">{{ r.kode }}</p></td>
                                 <td class="px-3 py-2.5 text-right font-bold">{{ r.admin }}</td>
                                 <td class="px-3 py-2.5 text-right font-bold">{{ r.kasir }}</td>
                                 <td class="px-3 py-2.5 text-right font-bold">{{ r.sku }}</td>
                                 <td class="px-3 py-2.5 text-right font-bold">{{ r.trx }}</td>
-                                <td class="px-3 py-2.5 text-right font-black text-emerald-400">{{ formatRupiahShort(r.omzet) }}</td>
+                                <td class="px-3 py-2.5 text-right font-black text-emerald-700 dark:text-emerald-400">{{ formatRupiahShort(r.omzet) }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -114,7 +114,7 @@
 
             <!-- Operasional (scope-aware) -->
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <div v-for="s in stats" :key="s.label" class="relative overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
+                <div v-for="s in stats" :key="s.label" class="relative overflow-hidden rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5">
                     <div class="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full blur-3xl" :style="{ background: hexA(s.color, 0.18) }" />
                     <div class="relative">
                         <div class="flex items-center justify-between">
@@ -124,7 +124,7 @@
                             <span class="rounded-md px-1.5 py-0.5 text-[10px] font-bold" :style="{ background: hexA(s.color, 0.12), color: s.color }">{{ s.sub }}</span>
                         </div>
                         <p class="mt-4 text-2xl font-bold tracking-tight">{{ s.value }}</p>
-                        <p class="mt-1 text-xs text-white/40">{{ s.label }}</p>
+                        <p class="mt-1 text-xs text-slate-500 dark:text-white/40">{{ s.label }}</p>
                     </div>
                 </div>
             </div>
@@ -133,59 +133,59 @@
                 <div class="xl:col-span-2">
                     <OmzetChart :data="omzetScope7" :subtitle="auth.role.value === 'super admin' && scopeSekolah ? `tb_penjualan • ${store.namaSekolah(scopeSekolah)}` : 'tb_penjualan • total_faktur per hari'" />
                 </div>
-                <div class="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
+                <div class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5">
                     <div class="flex items-center justify-between">
                         <h2 class="text-sm font-bold tracking-tight">Penjualan Terbaru</h2>
-                        <Link v-if="auth.can('/riwayat-transaksi')" href="/riwayat-transaksi" class="text-[11px] font-bold text-emerald-400 hover:text-emerald-300">Riwayat →</Link>
-                        <Link v-else href="/laporan" class="text-[11px] font-bold text-emerald-400 hover:text-emerald-300">Laporan →</Link>
+                        <Link v-if="auth.can('/riwayat-transaksi')" href="/riwayat-transaksi" class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:text-emerald-300">Riwayat →</Link>
+                        <Link v-else href="/laporan" class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:text-emerald-300">Laporan →</Link>
                     </div>
                     <div class="mt-4 space-y-2.5">
-                        <div v-for="t in recent" :key="t.id_penjualan" class="flex items-center gap-3 rounded-lg border border-white/[0.05] bg-white/[0.02] px-3 py-2.5">
-                            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-emerald-500/10 text-[11px] font-black text-emerald-400">{{ (namaPelanggan(t.id_pelanggan) || '?').slice(0, 1).toUpperCase() }}</div>
+                        <div v-for="t in recent" :key="t.id_penjualan" class="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.02] px-3 py-2.5">
+                            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-emerald-500/10 text-[11px] font-black text-emerald-700 dark:text-emerald-400">{{ (namaPelanggan(t.id_pelanggan) || '?').slice(0, 1).toUpperCase() }}</div>
                             <div class="min-w-0 flex-1">
                                 <p class="truncate text-xs font-bold">#TRX-{{ String(t.id_penjualan).padStart(4, '0') }} • {{ namaPelanggan(t.id_pelanggan) }}</p>
-                                <p class="truncate text-[11px] text-white/40">{{ formatDateTime(t.tanggal_penjualan) }} • {{ store.namaUser(t.id_user) }}</p>
+                                <p class="truncate text-[11px] text-slate-500 dark:text-white/40">{{ formatDateTime(t.tanggal_penjualan) }} • {{ store.namaUser(t.id_user) }}</p>
                             </div>
                             <p class="shrink-0 text-xs font-bold">{{ formatRupiahShort(t.total_faktur) }}</p>
                         </div>
-                        <p v-if="!recent.length" class="py-6 text-center text-xs text-white/30">Belum ada transaksi pada scope ini.</p>
+                        <p v-if="!recent.length" class="py-6 text-center text-xs text-slate-400 dark:text-white/30">Belum ada transaksi pada scope ini.</p>
                     </div>
                     <Link v-if="auth.can('/transaksi')" href="/transaksi" class="mt-4 flex h-9 w-full items-center justify-center rounded-lg bg-emerald-500 text-xs font-bold text-white transition-colors hover:bg-emerald-400">+ Transaksi Baru</Link>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                <div class="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
+                <div class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5">
                     <div class="flex items-center justify-between">
-                        <h2 class="text-sm font-bold tracking-tight">Stok Menipis <span class="text-white/30">({{ stokScope.length }})</span></h2>
-                        <Link v-if="auth.can('/produk')" href="/produk" class="text-[11px] font-bold text-amber-400 hover:text-amber-300">Kelola →</Link>
+                        <h2 class="text-sm font-bold tracking-tight">Stok Menipis <span class="text-slate-400 dark:text-white/30">({{ stokScope.length }})</span></h2>
+                        <Link v-if="auth.can('/produk')" href="/produk" class="text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300">Kelola →</Link>
                     </div>
-                    <div class="mt-3 overflow-hidden rounded-lg border border-white/[0.05]">
+                    <div class="mt-3 overflow-hidden rounded-lg border border-slate-200 dark:border-white/[0.05]">
                         <table class="w-full text-left text-xs">
-                            <thead><tr class="bg-white/[0.03] text-[10px] tracking-wider text-white/40 uppercase"><th class="px-3 py-2">Barang</th><th class="px-3 py-2 text-right">Stok</th></tr></thead>
+                            <thead><tr class="bg-white dark:bg-white/[0.03] text-[10px] tracking-wider text-slate-500 dark:text-white/40 uppercase"><th class="px-3 py-2">Barang</th><th class="px-3 py-2 text-right">Stok</th></tr></thead>
                             <tbody>
-                                <tr v-for="b in stokScope.slice(0, 6)" :key="b.id_barang" class="border-t border-white/[0.05]">
+                                <tr v-for="b in stokScope.slice(0, 6)" :key="b.id_barang" class="border-t border-slate-200 dark:border-white/[0.05]">
                                     <td class="px-3 py-2 font-bold">{{ b.nama }}</td>
-                                    <td class="px-3 py-2 text-right"><span class="rounded-md px-1.5 py-0.5 font-bold" :class="b.stok === 0 ? 'bg-rose-500/15 text-rose-400' : 'bg-amber-500/15 text-amber-400'">{{ b.stok }} {{ b.satuan }}</span></td>
+                                    <td class="px-3 py-2 text-right"><span class="rounded-md px-1.5 py-0.5 font-bold" :class="b.stok === 0 ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400' : 'bg-amber-500/15 text-amber-700 dark:text-amber-400'">{{ b.stok }} {{ b.satuan }}</span></td>
                                 </tr>
                             </tbody>
                         </table>
-                        <p v-if="!stokScope.length" class="px-3 py-6 text-center text-xs text-white/30">Semua stok aman.</p>
+                        <p v-if="!stokScope.length" class="px-3 py-6 text-center text-xs text-slate-400 dark:text-white/30">Semua stok aman.</p>
                     </div>
                 </div>
                 <!-- Kinerja kasir (semua peran operasional bisa lihat) -->
-                <div class="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
+                <div class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5">
                     <div class="flex items-center justify-between">
                         <h2 class="text-sm font-bold tracking-tight">Kinerja Kasir Hari Ini</h2>
                         <Link v-if="auth.can('/user')" href="/user" class="text-[11px] font-bold text-indigo-400 hover:text-indigo-300">Kelola user →</Link>
                     </div>
                     <div class="mt-3 space-y-2.5">
-                        <div v-for="k in kinerjaKasir" :key="k.id" class="flex items-center gap-3 rounded-lg border border-white/[0.05] bg-white/[0.02] px-3 py-2.5 text-xs">
+                        <div v-for="k in kinerjaKasir" :key="k.id" class="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.02] px-3 py-2.5 text-xs">
                             <div class="flex h-8 w-8 items-center justify-center rounded-md bg-indigo-500/15 text-[11px] font-black text-indigo-300">{{ k.inisial }}</div>
-                            <div class="flex-1"><p class="font-bold">{{ k.nama }}</p><p class="text-[11px] text-white/40">{{ k.trx }} transaksi</p></div>
-                            <p class="font-black text-emerald-400">{{ formatRupiahShort(k.omzet) }}</p>
+                            <div class="flex-1"><p class="font-bold">{{ k.nama }}</p><p class="text-[11px] text-slate-500 dark:text-white/40">{{ k.trx }} transaksi</p></div>
+                            <p class="font-black text-emerald-700 dark:text-emerald-400">{{ formatRupiahShort(k.omzet) }}</p>
                         </div>
-                        <p v-if="!kinerjaKasir.length" class="py-6 text-center text-xs text-white/30">Belum ada transaksi hari ini.</p>
+                        <p v-if="!kinerjaKasir.length" class="py-6 text-center text-xs text-slate-400 dark:text-white/30">Belum ada transaksi hari ini.</p>
                     </div>
                 </div>
             </div>
@@ -194,13 +194,13 @@
             <div v-if="auth.role.value === 'super admin'" class="rounded-xl border border-emerald-500/15 bg-emerald-500/[0.04] p-5">
                 <div class="flex items-center justify-between">
                     <h2 class="text-sm font-bold tracking-tight">🛡️ Panel Super Admin — Kelola Akses</h2>
-                    <Link href="/user" class="text-[11px] font-bold text-emerald-400 hover:text-emerald-300">Buka manajemen user →</Link>
+                    <Link href="/user" class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:text-emerald-300">Buka manajemen user →</Link>
                 </div>
                 <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    <div v-for="u in store.usersAktif.value" :key="u.id_user" class="flex items-center gap-2.5 rounded-lg border border-white/[0.06] bg-black/30 px-3 py-2.5 text-xs">
-                        <div class="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 text-[11px] font-black">{{ u.nama_lengkap.slice(0, 1) }}</div>
-                        <div class="min-w-0 flex-1"><p class="truncate font-bold">{{ u.nama_lengkap }}</p><p class="text-[10px] text-white/40">@{{ u.username }} • {{ store.namaSekolah(u.id_sekolah) }}</p></div>
-                        <span class="rounded px-1.5 py-0.5 text-[10px] font-black" :class="u.id_role === 1 ? 'bg-rose-500/15 text-rose-300' : u.id_role === 2 ? 'bg-violet-500/15 text-violet-300' : 'bg-blue-500/15 text-blue-300'">{{ store.namaRole(u.id_role) }}</span>
+                    <div v-for="u in store.usersAktif.value" :key="u.id_user" class="flex items-center gap-2.5 rounded-lg border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-black/30 px-3 py-2.5 text-xs">
+                        <div class="flex h-8 w-8 items-center justify-center rounded-md bg-slate-900/[0.06] dark:bg-white/10 text-[11px] font-black">{{ u.nama_lengkap.slice(0, 1) }}</div>
+                        <div class="min-w-0 flex-1"><p class="truncate font-bold">{{ u.nama_lengkap }}</p><p class="text-[10px] text-slate-500 dark:text-white/40">@{{ u.username }} • {{ store.namaSekolah(u.id_sekolah) }}</p></div>
+                        <span class="rounded px-1.5 py-0.5 text-[10px] font-black" :class="u.id_role === 1 ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300' : u.id_role === 2 ? 'bg-violet-500/15 text-violet-700 dark:text-violet-300' : 'bg-blue-500/15 text-blue-700 dark:text-blue-300'">{{ store.namaRole(u.id_role) }}</span>
                     </div>
                 </div>
             </div>

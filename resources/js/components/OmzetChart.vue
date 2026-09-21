@@ -1,15 +1,15 @@
 <template>
-    <div class="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
+    <div class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5">
         <div class="flex flex-wrap items-center justify-between gap-2">
             <div>
                 <h2 class="text-sm font-bold tracking-tight">{{ title }}</h2>
-                <p class="mt-0.5 text-[11px] text-white/40">{{ subtitle }}</p>
+                <p class="mt-0.5 text-[11px] text-slate-500 dark:text-white/40">{{ subtitle }}</p>
             </div>
             <div class="flex items-center gap-2">
-                <span class="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-bold text-white/50">Total {{ formatRupiahShort(total) }}</span>
-                <div class="flex rounded-lg bg-white/5 p-0.5 text-[11px] font-black">
-                    <button @click="mode = 'bar'" :class="mode === 'bar' ? 'bg-emerald-500 text-white' : 'text-white/40 hover:text-white'" class="rounded-md px-2.5 py-1">📊 Batang</button>
-                    <button @click="mode = 'line'" :class="mode === 'line' ? 'bg-emerald-500 text-white' : 'text-white/40 hover:text-white'" class="rounded-md px-2.5 py-1">📈 Garis</button>
+                <span class="rounded-md border border-slate-200 dark:border-white/10 bg-slate-900/[0.04] dark:bg-white/5 px-2 py-1 text-[10px] font-bold text-slate-500 dark:text-white/50">Total {{ formatRupiahShort(total) }}</span>
+                <div class="flex rounded-lg bg-slate-900/[0.04] dark:bg-white/5 p-0.5 text-[11px] font-black">
+                    <button @click="mode = 'bar'" :class="mode === 'bar' ? 'bg-emerald-500 text-white' : 'text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white'" class="rounded-md px-2.5 py-1">📊 Batang</button>
+                    <button @click="mode = 'line'" :class="mode === 'line' ? 'bg-emerald-500 text-white' : 'text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white'" class="rounded-md px-2.5 py-1">📈 Garis</button>
                 </div>
             </div>
         </div>
@@ -19,11 +19,11 @@
             <div class="mt-6 flex h-44 items-end gap-2">
                 <div v-for="d in data" :key="d.key" class="group relative flex-1 rounded-t-md bg-gradient-to-t from-emerald-600/40 to-emerald-400/90 transition-all hover:from-emerald-500/60 hover:to-emerald-300"
                     :style="{ height: Math.max(4, (d.total / maxVal) * 100) + '%' }">
-                    <span class="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded-md border border-white/10 bg-black px-1.5 py-0.5 text-[10px] font-bold whitespace-nowrap opacity-0 transition-opacity group-hover:opacity-100">{{ formatRupiahShort(d.total) }}</span>
+                    <span class="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded-md border border-slate-200 dark:border-white/10 bg-white dark:bg-black px-1.5 py-0.5 text-[10px] font-bold whitespace-nowrap opacity-0 transition-opacity group-hover:opacity-100">{{ formatRupiahShort(d.total) }}</span>
                 </div>
             </div>
             <div class="mt-2 flex gap-2">
-                <span v-for="d in data" :key="d.key" class="flex-1 text-center text-[10px] font-medium text-white/30">{{ d.label }}</span>
+                <span v-for="d in data" :key="d.key" class="flex-1 text-center text-[10px] font-medium text-slate-400 dark:text-white/30">{{ d.label }}</span>
             </div>
         </template>
 
@@ -38,31 +38,31 @@
                         </linearGradient>
                     </defs>
                     <!-- grid horizontal -->
-                    <line v-for="g in [0.25, 0.5, 0.75]" :key="g" :x1="PAD" :x2="W - PAD" :y1="PAD + (H - 2 * PAD) * g" :y2="PAD + (H - 2 * PAD) * g" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 4" />
+                    <line v-for="g in [0.25, 0.5, 0.75]" :key="g" :x1="PAD" :x2="W - PAD" :y1="PAD + (H - 2 * PAD) * g" :y2="PAD + (H - 2 * PAD) * g" :stroke="gridStroke()" stroke-dasharray="3 4" />
                     <!-- area -->
                     <path :d="areaPath" fill="url(#omzetFill)" />
                     <!-- garis -->
                     <path :d="linePath" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
                     <!-- titik -->
                     <circle v-for="(p, i) in points" :key="p.x" :cx="p.x" :cy="p.y" r="4"
-                        :fill="hover && hover.i === i ? '#a7f3d0' : '#0a0a0a'" stroke="#34d399" stroke-width="2.5" />
+                        :fill="pointFill(i)" stroke="#34d399" stroke-width="2.5" />
                     <!-- garis vertikal penunjuk -->
                     <line v-if="hover" :x1="points[hover.i].x" :x2="points[hover.i].x" :y1="PAD" :y2="H - PAD" stroke="rgba(52,211,153,0.5)" stroke-dasharray="3 3" />
                 </svg>
 
                 <!-- tooltip: kanan-atas cursor, ikut gerak -->
                 <div v-if="hover"
-                    class="pointer-events-none absolute z-10 w-36 rounded-lg border border-emerald-500/30 bg-black/90 p-2.5 shadow-xl shadow-emerald-500/10 backdrop-blur"
+                    class="pointer-events-none absolute z-10 w-36 rounded-lg border border-emerald-500/30 bg-white dark:bg-black/90 p-2.5 shadow-xl shadow-emerald-500/10 backdrop-blur"
                     :style="{ left: tipPos.x + 'px', top: tipPos.y + 'px' }">
-                    <p class="text-[10px] font-bold tracking-widest text-white/40 uppercase">{{ data[hover.i].label }}</p>
-                    <p class="mt-0.5 text-sm font-black text-emerald-400">{{ formatRupiah(data[hover.i].total) }}</p>
-                    <p class="mt-0.5 text-[11px] text-white/50">{{ data[hover.i].trx }} transaksi</p>
+                    <p class="text-[10px] font-bold tracking-widest text-slate-500 dark:text-white/40 uppercase">{{ data[hover.i].label }}</p>
+                    <p class="mt-0.5 text-sm font-black text-emerald-700 dark:text-emerald-400">{{ formatRupiah(data[hover.i].total) }}</p>
+                    <p class="mt-0.5 text-[11px] text-slate-500 dark:text-white/50">{{ data[hover.i].trx }} transaksi</p>
                 </div>
             </div>
             <div class="mt-1 flex gap-2">
-                <span v-for="d in data" :key="d.key" class="flex-1 text-center text-[10px] font-medium text-white/30">{{ d.label }}</span>
+                <span v-for="d in data" :key="d.key" class="flex-1 text-center text-[10px] font-medium text-slate-400 dark:text-white/30">{{ d.label }}</span>
             </div>
-            <p class="mt-2 text-[10px] text-white/25">Arahkan cursor ke garis untuk detail harian.</p>
+            <p class="mt-2 text-[10px] text-slate-400 dark:text-white/25">Arahkan cursor ke garis untuk detail harian.</p>
         </template>
     </div>
 </template>
@@ -80,6 +80,11 @@ const props = defineProps({
 const mode = ref('bar');
 const total = computed(() => props.data.reduce((s, d) => s + (d.total || 0), 0));
 const maxVal = computed(() => Math.max(1, ...props.data.map((d) => d.total || 0)));
+
+/* ---------- warna grid/titik mengikuti tema (dark final, light slate) ---------- */
+const isDarkChart = () => typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+const gridStroke = () => (isDarkChart() ? 'rgba(255,255,255,0.06)' : 'rgba(100,116,139,0.22)');
+const pointFill = (i) => (hover.value && hover.value.i === i ? '#a7f3d0' : (isDarkChart() ? '#0a0a0a' : '#ffffff'));
 
 /* ---------- geometri line chart (viewBox tetap, responsif) ---------- */
 const W = 700, H = 220, PAD = 14;

@@ -3,71 +3,71 @@
     <div v-else class="space-y-4">
         <!-- Summary -->
         <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
-            <div v-for="s in summary" :key="s.label" class="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-                <p class="text-[11px] text-white/40">{{ s.label }}</p>
+            <div v-for="s in summary" :key="s.label" class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-4">
+                <p class="text-[11px] text-slate-500 dark:text-white/40">{{ s.label }}</p>
                 <p class="mt-1 text-lg font-black">{{ s.value }}</p>
-                <p class="mt-0.5 text-[10px] text-white/30">{{ s.sub }}</p>
+                <p class="mt-0.5 text-[10px] text-slate-400 dark:text-white/30">{{ s.sub }}</p>
             </div>
         </div>
 
         <!-- Tab + search + filter -->
-        <div class="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+        <div class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-4">
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <div class="flex gap-1.5 text-[11px] font-bold">
-                    <button @click="tab = 'hari'; page = 1" :class="tab === 'hari' ? 'bg-emerald-500 text-white' : 'bg-white/5 text-white/50'" class="h-8 rounded-lg px-3">Hari Ini ({{ countHari }})</button>
-                    <button @click="tab = 'semua'; page = 1" :class="tab === 'semua' ? 'bg-emerald-500 text-white' : 'bg-white/5 text-white/50'" class="h-8 rounded-lg px-3">Semua ({{ countSemua }})</button>
-                    <button v-if="auth.role.value === 'kasir'" @click="tab = 'saya'; page = 1" :class="tab === 'saya' ? 'bg-blue-500 text-white' : 'bg-white/5 text-white/50'" class="h-8 rounded-lg px-3">Penjualan Saya ({{ countSaya }})</button>
+                    <button @click="tab = 'hari'; page = 1" :class="tab === 'hari' ? 'bg-emerald-500 text-white' : 'bg-slate-900/[0.04] dark:bg-white/5 text-slate-500 dark:text-white/50'" class="h-8 rounded-lg px-3">Hari Ini ({{ countHari }})</button>
+                    <button @click="tab = 'semua'; page = 1" :class="tab === 'semua' ? 'bg-emerald-500 text-white' : 'bg-slate-900/[0.04] dark:bg-white/5 text-slate-500 dark:text-white/50'" class="h-8 rounded-lg px-3">Semua ({{ countSemua }})</button>
+                    <button v-if="auth.role.value === 'kasir'" @click="tab = 'saya'; page = 1" :class="tab === 'saya' ? 'bg-blue-500 text-white' : 'bg-slate-900/[0.04] dark:bg-white/5 text-slate-500 dark:text-white/50'" class="h-8 rounded-lg px-3">Penjualan Saya ({{ countSaya }})</button>
                 </div>
                 <Link href="/transaksi" class="h-8 rounded-lg bg-emerald-500 px-3 text-[11px] font-black leading-8 text-white hover:bg-emerald-400">+ Transaksi Baru</Link>
             </div>
 
             <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                <div class="flex h-9 items-center gap-2 rounded-lg border border-white/[0.08] bg-black/40 px-3 sm:col-span-2 lg:col-span-2">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4 shrink-0 text-white/30"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-                    <input v-model="q" @input="page = 1" placeholder="Cari no. TRX / pelanggan / kasir…" class="w-full bg-transparent text-xs outline-none placeholder:text-white/25" />
+                <div class="flex h-9 items-center gap-2 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-black/40 px-3 sm:col-span-2 lg:col-span-2">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4 shrink-0 text-slate-400 dark:text-white/30"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                    <input v-model="q" @input="page = 1" placeholder="Cari no. TRX / pelanggan / kasir…" class="w-full bg-transparent text-xs outline-none placeholder:text-slate-400 dark:placeholder:text-white/25" />
                 </div>
-                <select v-model="fStatus" @change="page = 1" class="h-9 rounded-lg border border-white/[0.08] bg-black/40 px-2 text-xs text-white/80 outline-none">
+                <select v-model="fStatus" @change="page = 1" class="h-9 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-black/40 px-2 text-xs text-slate-700 dark:text-white/80 outline-none">
                     <option value="">Semua status</option>
                     <option value="sudah bayar">Sudah bayar</option>
                     <option value="belum bayar">Belum bayar (piutang)</option>
                 </select>
-                <select v-model="fCara" @change="page = 1" class="h-9 rounded-lg border border-white/[0.08] bg-black/40 px-2 text-xs text-white/80 outline-none">
+                <select v-model="fCara" @change="page = 1" class="h-9 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-black/40 px-2 text-xs text-slate-700 dark:text-white/80 outline-none">
                     <option value="">Semua cara bayar</option>
                     <option>Tunai</option><option>QRIS</option><option>Transfer</option><option>Tempo</option>
                 </select>
             </div>
-            <p class="mt-2 text-[11px] text-white/40">Menampilkan {{ paged.length }} dari {{ filtered.length }} transaksi • Omzet tampil: <span class="font-black text-emerald-400">{{ formatRupiah(omzetFiltered) }}</span></p>
+            <p class="mt-2 text-[11px] text-slate-500 dark:text-white/40">Menampilkan {{ paged.length }} dari {{ filtered.length }} transaksi • Omzet tampil: <span class="font-black text-emerald-700 dark:text-emerald-400">{{ formatRupiah(omzetFiltered) }}</span></p>
 
             <div class="mt-2 space-y-2">
-                <div v-for="t in paged" :key="t.id_penjualan" class="rounded-lg border border-white/[0.05] bg-black/30">
+                <div v-for="t in paged" :key="t.id_penjualan" class="rounded-lg border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-black/30">
                     <button @click="openId = openId === t.id_penjualan ? 0 : t.id_penjualan" class="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-xs">
                         <span class="text-left font-bold">#TRX-{{ String(t.id_penjualan).padStart(4, '0') }} • {{ store.namaPelanggan(t.id_pelanggan) }}
-                            <span class="mt-0.5 block text-[10px] font-normal text-white/35">{{ formatDateTime(t.tanggal_penjualan) }} • {{ store.namaUser(t.id_user) }} • {{ t.cara_bayar }}</span>
+                            <span class="mt-0.5 block text-[10px] font-normal text-slate-400 dark:text-white/35">{{ formatDateTime(t.tanggal_penjualan) }} • {{ store.namaUser(t.id_user) }} • {{ t.cara_bayar }}</span>
                         </span>
                         <span class="flex shrink-0 items-center gap-2">
-                            <span :class="t.status_pembayaran === 'sudah bayar' ? 'text-emerald-400' : 'text-amber-400'" class="text-[10px] font-bold">{{ t.status_pembayaran }}</span>
+                            <span :class="t.status_pembayaran === 'sudah bayar' ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'" class="text-[10px] font-bold">{{ t.status_pembayaran }}</span>
                             <span class="font-black">{{ formatRupiah(t.total_faktur) }}</span>
                         </span>
                     </button>
-                    <div v-if="openId === t.id_penjualan" class="border-t border-white/[0.05] px-3 py-2 text-[11px] text-white/60">
+                    <div v-if="openId === t.id_penjualan" class="border-t border-slate-200 dark:border-white/[0.05] px-3 py-2 text-[11px] text-slate-600 dark:text-white/60">
                         <p v-for="d in store.detailJual(t.id_penjualan)" :key="d.id_detail_penjualan" class="flex justify-between py-0.5">
-                            <span>{{ store.namaBarang(d.id_barang) }} × {{ d.jumlah_barang }} <span v-if="d.diskon_nilai" class="text-emerald-400">(-{{ d.diskon_nilai }}%)</span></span>
-                            <span class="font-bold text-white/90">{{ formatRupiah(d.subtotal) }}</span>
+                            <span>{{ store.namaBarang(d.id_barang) }} × {{ d.jumlah_barang }} <span v-if="d.diskon_nilai" class="text-emerald-700 dark:text-emerald-400">(-{{ d.diskon_nilai }}%)</span></span>
+                            <span class="font-bold text-slate-900 dark:text-white/90">{{ formatRupiah(d.subtotal) }}</span>
                         </p>
-                        <p class="mt-1 flex justify-between border-t border-white/10 pt-1 text-white/80"><span>Bayar ({{ t.cara_bayar }}) • Kembali</span><span class="font-bold">{{ formatRupiah(t.total_bayar) }} • {{ formatRupiah(t.kembalian) }}</span></p>
+                        <p class="mt-1 flex justify-between border-t border-slate-200 dark:border-white/10 pt-1 text-slate-700 dark:text-white/80"><span>Bayar ({{ t.cara_bayar }}) • Kembali</span><span class="font-bold">{{ formatRupiah(t.total_bayar) }} • {{ formatRupiah(t.kembalian) }}</span></p>
                         <div class="mt-2 flex gap-2">
-                            <button @click="cetakUlang(t)" class="h-8 flex-1 rounded-lg bg-white/5 text-[11px] font-bold text-white/70 hover:bg-white/10">🖨️ Cetak Ulang</button>
-                            <button v-if="canVoid(t)" @click="batalkan(t)" class="h-8 flex-1 rounded-lg bg-rose-500/10 text-[11px] font-bold text-rose-300 hover:bg-rose-500/20">Batalkan Transaksi</button>
+                            <button @click="cetakUlang(t)" class="h-8 flex-1 rounded-lg bg-slate-900/[0.04] dark:bg-white/5 text-[11px] font-bold text-slate-600 dark:text-white/70 hover:bg-slate-900/5 dark:hover:bg-white/10">🖨️ Cetak Ulang</button>
+                            <button v-if="canVoid(t)" @click="batalkan(t)" class="h-8 flex-1 rounded-lg bg-rose-500/10 text-[11px] font-bold text-rose-700 dark:text-rose-300 hover:bg-rose-500/20">Batalkan Transaksi</button>
                         </div>
                     </div>
                 </div>
-                <p v-if="!filtered.length" class="py-6 text-center text-xs text-white/30">Tidak ada transaksi yang cocok dengan filter.</p>
+                <p v-if="!filtered.length" class="py-6 text-center text-xs text-slate-400 dark:text-white/30">Tidak ada transaksi yang cocok dengan filter.</p>
             </div>
 
-            <div v-if="totalPages > 1" class="mt-3 flex items-center justify-between text-[11px] text-white/40">
-                <button @click="page = Math.max(1, page - 1)" :disabled="page <= 1" class="h-8 rounded-lg bg-white/5 px-3 font-bold text-white/70 disabled:opacity-40">‹ Prev</button>
+            <div v-if="totalPages > 1" class="mt-3 flex items-center justify-between text-[11px] text-slate-500 dark:text-white/40">
+                <button @click="page = Math.max(1, page - 1)" :disabled="page <= 1" class="h-8 rounded-lg bg-slate-900/[0.04] dark:bg-white/5 px-3 font-bold text-slate-600 dark:text-white/70 disabled:opacity-40">‹ Prev</button>
                 <span>Halaman {{ page }} / {{ totalPages }}</span>
-                <button @click="page = Math.min(totalPages, page + 1)" :disabled="page >= totalPages" class="h-8 rounded-lg bg-white/5 px-3 font-bold text-white/70 disabled:opacity-40">Next ›</button>
+                <button @click="page = Math.min(totalPages, page + 1)" :disabled="page >= totalPages" class="h-8 rounded-lg bg-slate-900/[0.04] dark:bg-white/5 px-3 font-bold text-slate-600 dark:text-white/70 disabled:opacity-40">Next ›</button>
             </div>
         </div>
     </div>

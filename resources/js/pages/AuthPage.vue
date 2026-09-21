@@ -17,18 +17,26 @@
             </div>
 
             <div
-                class="absolute inset-0 z-0 bg-gradient-to-br from-[#021508] via-[#083317] to-[#011206]"
+                class="absolute inset-0 z-0 bg-gradient-to-br"
+                :class="theme === 'dark' ? 'from-[#021508] via-[#083317] to-[#011206]' : 'from-[#dcefe2] via-[#c9e5d3] to-[#ecf3ee]'"
             />
             <motion.div
                 :style="{ x: blobX, y: blobY }"
-                class="absolute top-[-25%] right-[-10%] z-0 h-[55vw] w-[55vw] rounded-full bg-emerald-400/25 blur-[140px]"
+                class="absolute top-[-25%] right-[-10%] z-0 h-[55vw] w-[55vw] rounded-full blur-[140px]"
+                :class="theme === 'dark' ? 'bg-emerald-400/25' : 'bg-emerald-300/60'"
             />
             <motion.div
                 :style="{ x: blobX, y: blobY }"
-                class="absolute bottom-[-25%] left-[5%] z-0 h-[45vw] w-[45vw] rounded-full bg-green-400/20 blur-[130px]"
+                class="absolute bottom-[-25%] left-[5%] z-0 h-[45vw] w-[45vw] rounded-full blur-[130px]"
+                :class="theme === 'dark' ? 'bg-green-400/20' : 'bg-teal-200/70'"
             />
             <div
-                class="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(rgba(134,239,172,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(134,239,172,0.07)_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_80%)] bg-[size:64px_64px]"
+                class="pointer-events-none absolute inset-0 z-0 [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_80%)] bg-[size:64px_64px]"
+                :style="{
+                    backgroundImage: theme === 'dark'
+                        ? 'linear-gradient(rgba(134,239,172,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(134,239,172,0.07)_1px,transparent_1px)'
+                        : 'linear-gradient(rgba(5,150,105,0.10)_1px,transparent_1px),linear-gradient(90deg,rgba(5,150,105,0.10)_1px,transparent_1px)',
+                }"
             />
 
             <div
@@ -36,7 +44,7 @@
             >
                 <motion.div
                     class="flex flex-col items-center text-[18vw] leading-none font-black tracking-tighter whitespace-nowrap text-transparent opacity-60"
-                    :style="{ WebkitTextStroke: '2px rgba(134,239,172,0.15)' }"
+                    :style="{ WebkitTextStroke: theme === 'dark' ? '2px rgba(134,239,172,0.15)' : '2px rgba(5,150,105,0.28)' }"
                     :animate="{ x: [-15, 15, -15] }"
                     :transition="{
                         duration: 12,
@@ -68,7 +76,7 @@
                             class="relative z-10 flex max-w-lg flex-col items-center gap-6 text-center"
                         >
                             <div
-                                class="inline-flex items-center gap-2 rounded-full border border-green-300/30 bg-green-500/10 px-5 py-2 text-xs font-bold tracking-widest text-green-300 uppercase shadow-[0_0_20px_rgba(34,197,94,0.15)] backdrop-blur-md"
+                                class="inline-flex items-center gap-2 rounded-full border border-green-300/30 bg-green-500/10 px-5 py-2 text-xs font-bold tracking-widest text-emerald-700 uppercase shadow-[0_0_20px_rgba(34,197,94,0.15)] backdrop-blur-md dark:border-green-300/30 dark:bg-green-500/10 dark:text-green-300"
                             >
                                 <span class="relative flex h-2 w-2">
                                     <span
@@ -84,7 +92,7 @@
                             </div>
 
                             <h3
-                                class="text-5xl leading-[1.05] font-black tracking-tighter whitespace-pre-line !text-white text-[var(--text-primary)] drop-shadow-[0_4px_30px_rgba(0,0,0,0.5)] lg:text-6xl"
+                                class="text-5xl leading-[1.05] font-black tracking-tighter whitespace-pre-line text-[var(--text-primary)] drop-shadow-[0_4px_30px_rgba(0,0,0,0.5)] lg:text-6xl"
                             >
                                 {{ 'Jualan\nMakin Mudah' }}
                             </h3>
@@ -102,12 +110,12 @@
                                         class="absolute text-center"
                                     >
                                         <p
-                                            class="text-sm leading-relaxed text-green-100/90 italic lg:text-base"
+                                            class="text-sm leading-relaxed text-emerald-900 italic lg:text-base dark:text-green-100/90"
                                         >
                                             "{{ QUOTES[quoteIdx].text }}"
                                         </p>
                                         <p
-                                            class="mt-2 text-xs font-bold tracking-widest text-green-400 uppercase"
+                                            class="mt-2 text-xs font-bold tracking-widest text-emerald-600 uppercase dark:text-green-400"
                                         >
                                             — {{ QUOTES[quoteIdx].author }}
                                         </p>
@@ -227,7 +235,7 @@
                                                 />
                                                 <svg
                                                     v-if="formState.remember"
-                                                    class="h-3 w-3 text-green-400"
+                                                    class="h-3 w-3 text-emerald-600 dark:text-green-400"
                                                     fill="none"
                                                     viewBox="0 0 24 24"
                                                     stroke="currentColor"
@@ -247,7 +255,7 @@
                                         </label>
                                         <a
                                             href="#"
-                                            class="text-xs font-bold text-green-400 transition-colors hover:text-green-300"
+                                            class="text-xs font-bold text-emerald-600 transition-colors hover:text-emerald-500 dark:text-green-400 dark:hover:text-green-300"
                                             >Forgot Password?</a
                                         >
                                     </div>
@@ -283,7 +291,7 @@
                                     </MagneticButton>
 
                                     <div class="mt-1 rounded-2xl border border-green-400/20 bg-green-500/[0.06] px-4 py-3 text-center">
-                                        <p class="text-[11px] font-black tracking-[0.2em] text-green-400/80 uppercase">
+                                        <p class="text-[11px] font-black tracking-[0.2em] text-emerald-700 uppercase dark:text-green-400/80">
                                             Akun demo
                                         </p>
                                         <p class="mt-1 font-mono text-[11px] text-[var(--text-secondary)]">
@@ -311,6 +319,7 @@
 import {
     ref,
     reactive,
+    computed,
     onMounted,
     onUnmounted,
     defineComponent,
@@ -318,6 +327,7 @@ import {
 } from 'vue';
 import { router as inertiaRouter } from '@inertiajs/vue3';
 import { loginAsMockUser } from '@/composables/useAuthMock';
+import { useAppearance } from '@/composables/useAppearance';
 import { apiLogin, apiMe } from '@/lib/api';
 import {
     motion,
@@ -534,7 +544,7 @@ const FloatingInput = defineComponent({
                 h(
                     'div',
                     {
-                        class: 'absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-xl flex items-center justify-center text-[var(--text-secondary)] bg-[var(--input-bg)] border border-[var(--input-border)] group-focus-within:text-green-400 group-focus-within:bg-green-400/10 group-focus-within:border-green-400/20 transition-all duration-200 pointer-events-none z-10',
+                        class: 'absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-xl flex items-center justify-center text-[var(--text-secondary)] bg-[var(--input-bg)] border border-[var(--input-border)] group-focus-within:text-emerald-600 dark:group-focus-within:text-green-400 group-focus-within:bg-green-400/10 group-focus-within:border-green-400/20 transition-all duration-200 pointer-events-none z-10',
                     },
                     [h(props.icon)],
                 ),
@@ -557,7 +567,7 @@ const FloatingInput = defineComponent({
                     {
                         class: `absolute left-14 cursor-text pointer-events-none transition-all duration-200 ${
                             isActive()
-                                ? '-top-2.5 text-[11px] bg-[var(--label-active-bg)] px-2 text-green-400 font-bold tracking-wider rounded-full border border-green-400/30'
+                                ? '-top-2.5 text-[11px] bg-[var(--label-active-bg)] px-2 text-emerald-600 dark:text-green-400 font-bold tracking-wider rounded-full border border-green-400/30'
                                 : 'top-1/2 -translate-y-1/2 text-sm text-[var(--text-secondary)]'
                         }`,
                     },
@@ -620,7 +630,7 @@ const ParticlesEngine = defineComponent({
                 ...FIREFLY_CONFIG.map((f, i) =>
                     h(motion.div, {
                         key: `fly-${i}`,
-                        class: 'absolute rounded-full bg-green-300 blur-[1px]',
+                        class: 'absolute rounded-full bg-emerald-500 blur-[1px]',
                         style: {
                             left: f.left,
                             top: f.top,
@@ -682,7 +692,10 @@ const ParticlesEngine = defineComponent({
 /* STATE (login saja — tanpa mode signup) */
 /* ================================================== */
 const quoteIdx = ref(0);
-const theme = ref('dark');
+/* Tema global KasirKu (diingat permanen di localStorage, default gelap). */
+const { appearance, resolvedAppearance, updateAppearance } = useAppearance();
+const theme = computed(() => (resolvedAppearance.value === 'light' ? 'light' : 'dark'));
+void appearance;
 
 const formState = reactive({
     username: '',
@@ -694,29 +707,10 @@ const errorMessage = ref(null);
 const isLoading = ref(false);
 
 /* ================================================== */
-/* THEME */
+/* THEME — mengikuti & mengubah tema global (tersimpan permanen) */
 /* ================================================== */
-onMounted(() => {
-    const savedTheme = localStorage.getItem('site-theme');
-    if (savedTheme === 'white') {
-        theme.value = 'light';
-        document.body.classList.add('light-theme');
-    } else {
-        theme.value = 'dark';
-        document.body.classList.remove('light-theme');
-    }
-});
-
 const toggleTheme = () => {
-    const newTheme = theme.value === 'dark' ? 'light' : 'dark';
-    theme.value = newTheme;
-    if (newTheme === 'light') {
-        document.body.classList.add('light-theme');
-        localStorage.setItem('site-theme', 'white');
-    } else {
-        document.body.classList.remove('light-theme');
-        localStorage.setItem('site-theme', 'dark');
-    }
+    updateAppearance(theme.value === 'dark' ? 'light' : 'dark');
 };
 
 /* ================================================== */
@@ -780,15 +774,15 @@ const themeVars = {
         '--green-text': '#4ade80',
     },
     light: {
-        '--bg-primary': '#f0fdf4',
+        '--bg-primary': '#edf3ef',
         '--bg-panel': '#ffffff',
-        '--text-primary': '#111827',
-        '--text-secondary': '#4b5563',
-        '--border': 'rgba(0,0,0,0.1)',
-        '--input-bg': 'rgba(0,0,0,0.03)',
-        '--input-border': 'rgba(0,0,0,0.15)',
-        '--input-hover-bg': 'rgba(0,0,0,0.05)',
-        '--input-focus-bg': 'rgba(0,0,0,0.07)',
+        '--text-primary': '#0f172a',
+        '--text-secondary': '#475569',
+        '--border': 'rgba(15,23,42,0.12)',
+        '--input-bg': '#ffffff',
+        '--input-border': 'rgba(15,23,42,0.16)',
+        '--input-hover-bg': '#f8fafc',
+        '--input-focus-bg': '#ffffff',
         '--label-active-bg': '#ffffff',
         '--wave-color': '#ffffff',
         '--green-text': '#059669',
