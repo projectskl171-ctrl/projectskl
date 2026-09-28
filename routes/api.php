@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\PembelianController;
 use App\Http\Controllers\Api\PenjualanController;
 use App\Http\Controllers\Api\ProdukController;
 use App\Http\Controllers\Api\SekolahController;
+use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\AuthController;
@@ -41,6 +42,16 @@ Route::middleware('web')->group(function () {
             Route::post('/sekolah', [SekolahController::class, 'store'])->name('api.sekolah.store');
             Route::put('/sekolah/{id}', [SekolahController::class, 'update'])->name('api.sekolah.update');
             Route::patch('/sekolah/{id}/toggle', [SekolahController::class, 'toggle'])->name('api.sekolah.toggle');
+            Route::delete('/sekolah/{id}', [SekolahController::class, 'destroy'])->name('api.sekolah.destroy');
+        });
+
+        // Settings profil sendiri: hanya admin & super admin
+        // (kasir diatur oleh admin sekolahnya).
+        Route::middleware('role:admin,super admin')->group(function () {
+            Route::get('/settings/me', [SettingsController::class, 'me'])->name('api.settings.me');
+            Route::put('/settings/profile', [SettingsController::class, 'updateProfile'])->name('api.settings.profile');
+            Route::post('/settings/password/check', [SettingsController::class, 'checkPassword'])->name('api.settings.password.check');
+            Route::put('/settings/password', [SettingsController::class, 'updatePassword'])->name('api.settings.password');
         });
 
         // Users: super admin + admin (admin dibatasi kasir di controller).

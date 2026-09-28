@@ -28,6 +28,7 @@ class TbUser extends Authenticatable
 
     protected $fillable = [
         'id_sekolah', 'id_role', 'username', 'password', 'nama_lengkap',
+        'nama_lengkap_changed_at', 'username_changed_at',
         'is_active', 'created_at', 'created_by', 'updated_at', 'updated_by',
         'deleted_at', 'deleted_by',
     ];
@@ -39,6 +40,8 @@ class TbUser extends Authenticatable
         return [
             'password' => 'hashed',
             'is_active' => 'integer',
+            'nama_lengkap_changed_at' => 'datetime',
+            'username_changed_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
             'deleted_at' => 'datetime',

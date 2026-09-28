@@ -64,11 +64,7 @@
                 <p v-if="!filtered.length" class="py-6 text-center text-xs text-slate-400 dark:text-white/30">Tidak ada transaksi yang cocok dengan filter.</p>
             </div>
 
-            <div v-if="totalPages > 1" class="mt-3 flex items-center justify-between text-[11px] text-slate-500 dark:text-white/40">
-                <button @click="page = Math.max(1, page - 1)" :disabled="page <= 1" class="h-8 rounded-lg bg-slate-900/[0.04] dark:bg-white/5 px-3 font-bold text-slate-600 dark:text-white/70 disabled:opacity-40">‹ Prev</button>
-                <span>Halaman {{ page }} / {{ totalPages }}</span>
-                <button @click="page = Math.min(totalPages, page + 1)" :disabled="page >= totalPages" class="h-8 rounded-lg bg-slate-900/[0.04] dark:bg-white/5 px-3 font-bold text-slate-600 dark:text-white/70 disabled:opacity-40">Next ›</button>
-            </div>
+            <Pagination :page="page" :total-pages="totalPages" @update:page="page = $event" />
         </div>
     </div>
 </template>
@@ -78,6 +74,7 @@ import { computed, onMounted, ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 import RoleDenied from '@/components/RoleDenied.vue';
+import Pagination from '@/components/Pagination.vue';
 import { hydrate, usePosStore } from '@/composables/usePosStore';
 import { useAuthMock } from '@/composables/useAuthMock';
 import { dayKey, formatDateTime, formatRupiah, todayKey } from '@/lib/format';

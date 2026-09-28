@@ -17,7 +17,7 @@
         </div>
 
         <div class="space-y-2">
-            <div v-for="p in filtered" :key="p.id_pembelian" class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] shadow-sm dark:shadow-none">
+            <div v-for="p in paged" :key="p.id_pembelian" class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] shadow-sm dark:shadow-none">
                 <button @click="openId = openId === p.id_pembelian ? 0 : p.id_pembelian" class="flex w-full flex-wrap items-center gap-2 px-4 py-3 text-left text-xs">
                     <span class="font-mono font-black">{{ p.nomor_faktur }}</span>
                     <span class="text-slate-500 dark:text-white/40">{{ store.namaSupplier(p.id_supplier) }} • {{ formatDate(p.tanggal_faktur) }}</span>
@@ -47,12 +47,13 @@
             </div>
             <p v-if="!filtered.length" class="rounded-xl border border-dashed border-slate-200 dark:border-white/10 py-10 text-center text-sm text-slate-400 dark:text-white/30">Tidak ada pembelian.</p>
         </div>
+        <Pagination :page="page" :total-pages="totalPages" @update:page="page = $event" />
     </div>
 
     <!-- FORM -->
     <div v-if="showForm && auth.can('/pembelian')" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" @click.self="showForm = false">
         <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#111] p-5 shadow-sm dark:shadow-none">
-            <h3 class="text-sm font-black">Pembelian Baru (tb_pembelian + tb_detail_pembelian)</h3>
+            <h3 class="text-sm font-black">Pembelian Baru</h3>
             <div class="mt-4 grid grid-cols-2 gap-2">
                 <label class="col-span-2 text-xs text-slate-500 dark:text-white/50">Supplier
                     <select v-model="f.supplier" class="mt-1 h-10 w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-black/50 px-3 text-sm text-slate-900 dark:text-white outline-none">
@@ -89,6 +90,8 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
+import Pagination from '@/components/Pagination.vue';
+import { usePagination } from '@/composables/usePagination';
 import { hydrate, usePosStore } from '@/composables/usePosStore';
 import RoleDenied from '@/components/RoleDenied.vue';
 import { useAuthMock } from '@/composables/useAuthMock';
@@ -103,10 +106,10 @@ const auth = useAuthMock();
 const q = ref(''), status = ref(''), openId = ref(0), showForm = ref(false), ferr = ref('');
 const f = ref({ supplier: 1, jenis: 'tunai', cara: 'Transfer', note: '', lines: [{ barang: 1, jumlah: 10, harga: 5000 }] });
 
-const filtered = computed(() => store.pembelianAktif.value.filter((p) => {
+const { page, totalPages, paged, filtered } = usePagination(() => store.pembelianAktif.value.filter((p) => {
     const okQ = !q.value || p.nomor_faktur.toLowerCase().includes(q.value.toLowerCase()) || store.namaSupplier(p.id_supplier).toLowerCase().includes(q.value.toLowerCase());
     return okQ && (!status.value || p.status_pembelian === status.value);
-}).sort((a, b) => b.id_pembelian - a.id_pembelian));
+}).sort((a, b) => b.id_pembelian - a.id_pembelian), 8, [q, status]);
 
 const stats = computed(() => [
     { label: 'Total Pembelian', value: formatRupiah(store.pembelianAktif.value.reduce((s, p) => s + p.total_bayar, 0)) },

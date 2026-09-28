@@ -53,7 +53,7 @@ class FortifyServiceProvider extends ServiceProvider
                 'password' => ['required', 'string'],
             ]);
 
-            $user = TbUser::with('role')
+            $user = TbUser::with(['role', 'sekolah'])
                 ->where('username', $request->input('username'))
                 ->first();
 
@@ -66,6 +66,13 @@ class FortifyServiceProvider extends ServiceProvider
             if (! $user->is_active) {
                 throw ValidationException::withMessages([
                     'username' => 'Akun nonaktif. Hubungi admin.',
+                ]);
+            }
+
+            // Sekolah nonaktif => kasir & admin sekolah itu tidak bisa login.
+            if ($user->role?->nama_role !== 'super admin' && $user->sekolah && ! $user->sekolah->is_active) {
+                throw ValidationException::withMessages([
+                    'username' => 'Sekolah anda sedang dinonaktifkan. Hubungi super admin.',
                 ]);
             }
 

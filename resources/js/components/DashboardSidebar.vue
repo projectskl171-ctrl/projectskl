@@ -366,8 +366,8 @@ const IconReceipt = makeIcon([
 /* =========================================================
    NAV CONFIG — `roles` = peran yang boleh LIHAT menu ini.
    kasir: Dashboard, Transaksi, Riwayat Transaksi, Pelanggan, Notifikasi, Settings.
-   admin: Dashboard, Produk, Pembelian, Supplier, User, Laporan, Notifikasi.
-   super admin: Dashboard, Sekolah, User, Laporan, Notifikasi.
+   admin: Dashboard, Produk, Pembelian, Supplier, User, Laporan, Notifikasi, Settings.
+   super admin: Dashboard, Sekolah, User, Laporan, Notifikasi, Settings.
    ========================================================= */
 const navGroups = [
     {
@@ -406,11 +406,11 @@ const visibleGroups = computed(() =>
 );
 
 const footerItems = [
-    { label: 'Settings', href: '/settings', color: '#94a3b8', icon: IconSettings, roles: ['kasir'] },
+    { label: 'Settings', href: '/settings', color: '#94a3b8', icon: IconSettings, roles: ['kasir', 'admin', 'super admin'] },
     { label: 'Logout', href: '/', color: '#ef4444', icon: IconLogout, action: keluar, roles: ['kasir', 'admin', 'super admin'] },
 ];
 
-/* Footer difilter peran juga (admin tidak dapat Settings) */
+/* Footer difilter peran juga (semua peran dapat Settings) */
 const visibleFooter = computed(() =>
     footerItems.filter((i) => !i.roles || auth.can(i.href) || i.href === '/'),
 );

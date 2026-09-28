@@ -6,7 +6,7 @@
             <button @click="baru" class="h-10 rounded-lg bg-teal-500 px-4 text-sm font-black text-black hover:bg-teal-400">+ Supplier</button>
         </div>
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <div v-for="s in filtered" :key="s.id_supplier" class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-4">
+            <div v-for="s in paged" :key="s.id_supplier" class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-4">
                 <div class="flex items-start justify-between gap-2">
                     <div class="flex items-center gap-2.5">
                         <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-500/15 text-sm font-black text-teal-700 dark:text-teal-300">{{ s.nama.slice(0, 1).toUpperCase() }}</div>
@@ -26,11 +26,12 @@
             </div>
         </div>
         <p v-if="!filtered.length" class="rounded-xl border border-dashed border-slate-200 dark:border-white/10 py-10 text-center text-sm text-slate-400 dark:text-white/30">Tidak ada supplier.</p>
+        <Pagination :page="page" :total-pages="totalPages" @update:page="page = $event" />
     </div>
 
     <div v-if="show && auth.can('/supplier')" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" @click.self="show = false">
         <div class="w-full max-w-md rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#111] p-5">
-            <h3 class="text-sm font-black">{{ form.id_supplier ? 'Edit Supplier' : 'Supplier Baru' }} <span class="font-normal text-slate-400 dark:text-white/30">(tb_supplier)</span></h3>
+            <h3 class="text-sm font-black">{{ form.id_supplier ? 'Edit Supplier' : 'Supplier Baru' }}</h3>
             <div class="mt-4 space-y-2 text-xs">
                 <label class="block text-slate-500 dark:text-white/50">Nama supplier<input v-model="form.nama" class="mt-1 h-10 w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-black/50 px-3 text-sm text-slate-900 dark:text-white outline-none" /></label>
                 <label class="block text-slate-500 dark:text-white/50">No. telepon<input v-model="form.no_telepon" class="mt-1 h-10 w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-black/50 px-3 text-sm text-slate-900 dark:text-white outline-none" /></label>
@@ -43,8 +44,10 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
+import Pagination from '@/components/Pagination.vue';
+import { usePagination } from '@/composables/usePagination';
 import { hydrate, usePosStore } from '@/composables/usePosStore';
 import RoleDenied from '@/components/RoleDenied.vue';
 import { useAuthMock } from '@/composables/useAuthMock';
@@ -57,8 +60,8 @@ const store = usePosStore();
 const auth = useAuthMock();
 const q = ref(''), show = ref(false), form = ref({});
 
-const filtered = computed(() => store.supplierAktif.value.filter((s) =>
-    !q.value || s.nama.toLowerCase().includes(q.value.toLowerCase()) || (s.no_telepon || '').includes(q.value)));
+const { page, totalPages, paged, filtered } = usePagination(() => store.supplierAktif.value.filter((s) =>
+    !q.value || s.nama.toLowerCase().includes(q.value.toLowerCase()) || (s.no_telepon || '').includes(q.value)), 8, [q]);
 const produkCount = (id) => store.barangAktif.value.filter((b) => b.id_supplier === id).length;
 const beliCount = (id) => store.pembelianAktif.value.filter((p) => p.id_supplier === id).length;
 const nilaiBeli = (id) => store.pembelianAktif.value.filter((p) => p.id_supplier === id).reduce((s, p) => s + p.total_bayar, 0);

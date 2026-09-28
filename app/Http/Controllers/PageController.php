@@ -161,6 +161,11 @@ class PageController extends Controller
         if ($actor->isAdmin()) {
             $q->whereHas('role', fn ($qq) => $qq->where('nama_role', Role::KASIR));
         }
+        if (Tenant::isSuperAdmin($actor)) {
+            // Super admin hanya mengelola admin (kasir urusan admin
+            // sekolah masing-masing).
+            $q->whereHas('role', fn ($qq) => $qq->whereIn('nama_role', [Role::SUPER_ADMIN, Role::ADMIN]));
+        }
 
         return Inertia::render('User', [
             'title' => 'User',

@@ -16,7 +16,7 @@ export interface Sekolah {
     created_at: string;
 }
 export interface Role { id_role: number; nama_role: 'super admin' | 'admin' | 'kasir' }
-export interface UserRow { id_user: number; id_sekolah: number; id_role: number; username: string; password: string; nama_lengkap: string; is_active: number; created_at: string; created_by: number | null }
+export interface UserRow { id_user: number; id_sekolah: number; id_role: number; username: string; password: string; nama_lengkap: string; nama_lengkap_changed_at?: string | null; username_changed_at?: string | null; is_active: number; created_at: string; created_by: number | null }
 export interface KelompokKategori { id_kelompok: number; id_sekolah: number; nama_kelompok: string; created_at: string; created_by: number }
 export interface Kategori { id_kategori: number; id_kelompok: number; nama: string; created_at: string; created_by: number; is_delete: number }
 export interface Supplier { id_supplier: number; id_sekolah: number; nama: string; no_telepon: string; alamat_supplier: string; created_at: string; created_by: number; is_delete: number }

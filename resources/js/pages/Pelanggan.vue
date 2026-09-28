@@ -15,7 +15,7 @@
             <button @click="baru" class="h-10 rounded-lg bg-pink-500 px-4 text-sm font-black text-white hover:bg-pink-400">+ Pelanggan</button>
         </div>
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-            <div v-for="p in filtered" :key="p.id_pelanggan" class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-4">
+            <div v-for="p in paged" :key="p.id_pelanggan" class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-4">
                 <div class="flex items-start justify-between gap-2">
                     <div class="flex items-center gap-2.5">
                         <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-pink-500/15 text-sm font-black text-pink-700 dark:text-pink-300">{{ p.nama_pelanggan.slice(0, 1).toUpperCase() }}</div>
@@ -36,11 +36,12 @@
             </div>
         </div>
         <p v-if="!filtered.length" class="rounded-xl border border-dashed border-slate-200 dark:border-white/10 py-10 text-center text-sm text-slate-400 dark:text-white/30">Tidak ada pelanggan.</p>
+        <Pagination :page="page" :total-pages="totalPages" @update:page="page = $event" />
     </div>
 
     <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" @click.self="show = false">
         <div class="w-full max-w-md rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#111] p-5">
-            <h3 class="text-sm font-black">{{ form.id_pelanggan ? 'Edit Pelanggan' : 'Pelanggan Baru' }} <span class="font-normal text-slate-400 dark:text-white/30">(tb_pelanggan)</span></h3>
+            <h3 class="text-sm font-black">{{ form.id_pelanggan ? 'Edit Pelanggan' : 'Pelanggan Baru' }}</h3>
             <div class="mt-4 space-y-2 text-xs">
                 <label class="block text-slate-500 dark:text-white/50">Nama<input v-model="form.nama_pelanggan" class="mt-1 h-10 w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-black/50 px-3 text-sm text-slate-900 dark:text-white outline-none" /></label>
                 <div class="grid grid-cols-2 gap-2">
@@ -60,6 +61,8 @@
 import { computed, onMounted, ref } from 'vue';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 import RoleDenied from '@/components/RoleDenied.vue';
+import Pagination from '@/components/Pagination.vue';
+import { usePagination } from '@/composables/usePagination';
 import { hydrate, usePosStore } from '@/composables/usePosStore';
 import { useAuthMock } from '@/composables/useAuthMock';
 import { formatRupiahShort } from '@/lib/format';
@@ -71,10 +74,10 @@ const store = usePosStore();
 const auth = useAuthMock();
 const q = ref(''), fKel = ref(0), show = ref(false), form = ref({});
 
-const filtered = computed(() => store.pelangganAktif.value.filter((p) => {
+const { page, totalPages, paged, filtered } = usePagination(() => store.pelangganAktif.value.filter((p) => {
     const okQ = !q.value || p.nama_pelanggan.toLowerCase().includes(q.value.toLowerCase()) || (p.telepon || '').includes(q.value);
     return okQ && (!fKel.value || p.id_kelompok_pelanggan === Number(fKel.value));
-}));
+}), 9, [q, fKel]);
 const trxCount = (id) => store.penjualanAktif.value.filter((t) => t.id_pelanggan === id).length;
 const belanja = (id) => store.penjualanAktif.value.filter((t) => t.id_pelanggan === id).reduce((s, t) => s + t.total_faktur, 0);
 const stats = computed(() => [

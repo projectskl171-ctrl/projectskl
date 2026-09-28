@@ -53,7 +53,10 @@ class SekolahController extends Controller
         return response()->json(['message' => 'Sekolah berhasil diperbarui.', 'data' => $sekolah->fresh()]);
     }
 
-    /** Aktif/nonaktif sekolah. Minimal 1 sekolah tetap aktif. */
+    /** Aktif/nonaktif sekolah. Minimal 1 sekolah tetap aktif.
+     *  Menonaktifkan sekolah ikut menonaktifkan SEMUA akun kasir & admin
+     *  di sekolah itu (tidak bisa login). Mengaktifkan kembali
+     *  mengembalikan akun-akun yang belum dihapus. */
     public function toggle(int $id): JsonResponse
     {
         $sekolah = TbSekolah::findOrFail($id);
@@ -62,8 +65,44 @@ class SekolahController extends Controller
             return response()->json(['message' => 'Minimal 1 sekolah harus tetap aktif.'], 422);
         }
 
-        $sekolah->update(['is_active' => $sekolah->is_active ? 0 : 1]);
+        $baru = $sekolah->is_active ? 0 : 1;
+        $sekolah->update(['is_active' => $baru]);
 
-        return response()->json(['message' => 'Status sekolah diperbarui.', 'data' => $sekolah->fresh()]);
+        // Cascade ke akun: nonaktif => semua user ikut mati;
+        // aktif => semua user yang belum dihapus ikut hidup lagi.
+        $sekolah->users()->whereNull('deleted_at')->update(['is_active' => $baru]);
+
+        return response()->json([
+            'message' => $baru
+                ? 'Sekolah diaktifkan. Akun kasir & admin di dalamnya ikut aktif.'
+                : 'Sekolah dinonaktifkan. Akun kasir & admin di dalamnya ikut nonaktif.',
+            'data' => $sekolah->fresh(),
+        ]);
+    }
+
+    /** Hapus sekolah beserta akun user di dalamnya.
+     *  Ditolak bila sekolah masih punya data operasional
+     *  (barang / penjualan / pembelian). */
+    public function destroy(int $id): JsonResponse
+    {
+        $sekolah = TbSekolah::findOrFail($id);
+
+        if (TbSekolah::where('is_active', 1)->count() <= 1 && $sekolah->is_active) {
+            return response()->json(['message' => 'Tidak dapat menghapus satu-satunya sekolah aktif.'], 422);
+        }
+
+        $punyaBarang = $sekolah->barang()->where('is_delete', 0)->count();
+        $punyaJual = $sekolah->penjualan()->where('is_delete', 0)->count();
+        $punyaBeli = $sekolah->pembelian()->where('is_delete', 0)->count();
+        if ($punyaBarang + $punyaJual + $punyaBeli > 0) {
+            return response()->json([
+                'message' => "Sekolah masih punya data ({$punyaBarang} barang, {$punyaJual} penjualan, {$punyaBeli} pembelian). Kosongkan dulu sebelum menghapus.",
+            ], 422);
+        }
+
+        $sekolah->users()->delete();
+        $sekolah->delete();
+
+        return response()->json(['message' => 'Sekolah beserta akun di dalamnya berhasil dihapus.']);
     }
 }

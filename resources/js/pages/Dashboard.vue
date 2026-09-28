@@ -8,17 +8,10 @@
                 <p class="text-sm font-black">Halo, {{ auth.user.value?.nama_lengkap }}! 👋</p>
                 <p class="text-[11px] text-slate-500 dark:text-white/40">{{ roleDesc }}</p>
             </div>
-            <span class="rounded-md px-2 py-1 text-[10px] font-black tracking-widest uppercase"
-                :style="{ background: hexA(ROLE_COLOR[auth.role.value], 0.15), color: ROLE_COLOR[auth.role.value] }">
-                Mode {{ auth.roleLabel.value }}
-            </span>
         </div>
 
         <!-- ============ KASIR : 1 dagang di 1 sekolah, fokus jualan ============ -->
         <template v-if="auth.role.value === 'kasir'">
-            <div class="rounded-xl border border-blue-500/20 bg-blue-500/[0.05] px-4 py-2.5 text-[11px] text-slate-600 dark:text-white/60">
-                🏪 <b>Dagang:</b> Kasir 01 • <b>{{ store.namaSekolah(1) }}</b> — datamu hanya mencakup transaksi & pelanggan dagang ini.
-            </div>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div v-for="s in kasirStats" :key="s.label" class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5">
                     <p class="text-[11px] text-slate-500 dark:text-white/40">{{ s.label }}</p>
@@ -53,34 +46,6 @@
 
         <!-- ============ ADMIN (1 sekolah) & SUPER ADMIN (semua sekolah) ============ -->
         <template v-else>
-            <!-- Konteks scope -->
-            <div v-if="auth.role.value === 'admin'" class="rounded-xl border border-violet-500/20 bg-violet-500/[0.05] px-4 py-2.5 text-[11px] text-slate-600 dark:text-white/60">
-                🏫 <b>Scope:</b> 1 sekolah — <b>{{ store.namaSekolah(1) }}</b>. Semua angka di bawah hanya mencakup sekolah ini.
-            </div>
-            <div v-else class="flex flex-col gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.05] px-4 py-3 sm:flex-row sm:items-center">
-                <p class="flex-1 text-[11px] text-slate-600 dark:text-white/60">🌐 <b>Scope:</b> semua sekolah aktif ({{ store.sekolahAktif.value.length }}). Pilih scope untuk memfilter angka operasional:</p>
-                <select v-model.number="scopeSekolah" class="h-9 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-black/40 px-3 text-xs font-bold outline-none">
-                    <option :value="0">Semua sekolah</option>
-                    <option v-for="s in store.sekolahAktif.value" :key="s.id_sekolah" :value="s.id_sekolah">{{ s.nama_sekolah }}</option>
-                </select>
-            </div>
-
-            <div v-if="auth.role.value === 'super admin'" class="rounded-xl border border-amber-500/20 bg-amber-500/[0.06] p-4">
-                <div class="flex items-center justify-between gap-3">
-                    <p class="text-[11px] font-black uppercase tracking-[0.18em] text-amber-700 dark:text-amber-300">Status sekolah</p>
-                    <span class="rounded-md bg-amber-500/15 px-2 py-1 text-[10px] font-black text-amber-200">{{ store.sekolahBelumBayar.value.length }} menunggak</span>
-                </div>
-                <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    <div v-for="s in store.sekolahBelumBayar.value" :key="s.id_sekolah" class="rounded-lg border border-amber-500/20 bg-white dark:bg-black/20 px-3 py-2 text-xs text-slate-600 dark:text-white/70">
-                        <p class="font-black text-slate-900 dark:text-white">{{ s.nama_sekolah }}</p>
-                        <p class="mt-1 text-[10px] text-slate-500 dark:text-white/45">{{ s.kode_sekolah }} • terakhir bayar: {{ s.bulan_terakhir_bayar || '—' }}</p>
-                    </div>
-                    <div v-if="!store.sekolahBelumBayar.value.length" class="rounded-lg border border-emerald-500/15 bg-emerald-500/[0.06] px-3 py-2 text-xs text-emerald-200">
-                        Semua sekolah sudah bayar bulan ini. Status aman.
-                    </div>
-                </div>
-            </div>
-
             <!-- Khusus super admin: ringkasan jaringan -->
             <template v-if="auth.role.value === 'super admin'">
                 <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
@@ -99,7 +64,7 @@
                             <th class="px-4 py-2.5">Sekolah</th><th class="px-3 py-2.5 text-right">Admin</th><th class="px-3 py-2.5 text-right">Kasir</th><th class="px-3 py-2.5 text-right">SKU</th><th class="px-3 py-2.5 text-right">Trx Hari Ini</th><th class="px-3 py-2.5 text-right">Omzet Hari Ini</th>
                         </tr></thead>
                         <tbody>
-                            <tr v-for="r in perSekolah" :key="r.id" class="border-t border-slate-200 dark:border-white/[0.05] hover:bg-emerald-600/5 dark:hover:bg-white/[0.02]">
+                            <tr v-for="r in perSekolahPaged" :key="r.id" class="border-t border-slate-200 dark:border-white/[0.05] hover:bg-emerald-600/5 dark:hover:bg-white/[0.02]">
                                 <td class="px-4 py-2.5"><p class="font-bold">{{ r.nama }}</p><p class="font-mono text-[10px] text-slate-400 dark:text-white/30">{{ r.kode }}</p></td>
                                 <td class="px-3 py-2.5 text-right font-bold">{{ r.admin }}</td>
                                 <td class="px-3 py-2.5 text-right font-bold">{{ r.kasir }}</td>
@@ -110,6 +75,7 @@
                         </tbody>
                     </table>
                 </div>
+                <Pagination :page="sekolahPage" :total-pages="sekolahTotalPages" @update:page="sekolahPage = $event" />
             </template>
 
             <!-- Operasional (scope-aware) -->
@@ -131,7 +97,7 @@
 
             <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
                 <div class="xl:col-span-2">
-                    <OmzetChart :data="omzetScope7" :subtitle="auth.role.value === 'super admin' && scopeSekolah ? `tb_penjualan • ${store.namaSekolah(scopeSekolah)}` : 'tb_penjualan • total_faktur per hari'" />
+                    <OmzetChart :data="omzetScope7" subtitle="total faktur per hari" />
                 </div>
                 <div class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5">
                     <div class="flex items-center justify-between">
@@ -154,55 +120,20 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                <div class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-sm font-bold tracking-tight">Stok Menipis <span class="text-slate-400 dark:text-white/30">({{ stokScope.length }})</span></h2>
-                        <Link v-if="auth.can('/produk')" href="/produk" class="text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300">Kelola →</Link>
-                    </div>
-                    <div class="mt-3 overflow-hidden rounded-lg border border-slate-200 dark:border-white/[0.05]">
-                        <table class="w-full text-left text-xs">
-                            <thead><tr class="bg-white dark:bg-white/[0.03] text-[10px] tracking-wider text-slate-500 dark:text-white/40 uppercase"><th class="px-3 py-2">Barang</th><th class="px-3 py-2 text-right">Stok</th></tr></thead>
-                            <tbody>
-                                <tr v-for="b in stokScope.slice(0, 6)" :key="b.id_barang" class="border-t border-slate-200 dark:border-white/[0.05]">
-                                    <td class="px-3 py-2 font-bold">{{ b.nama }}</td>
-                                    <td class="px-3 py-2 text-right"><span class="rounded-md px-1.5 py-0.5 font-bold" :class="b.stok === 0 ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400' : 'bg-amber-500/15 text-amber-700 dark:text-amber-400'">{{ b.stok }} {{ b.satuan }}</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <p v-if="!stokScope.length" class="px-3 py-6 text-center text-xs text-slate-400 dark:text-white/30">Semua stok aman.</p>
-                    </div>
-                </div>
-                <!-- Kinerja kasir (semua peran operasional bisa lihat) -->
-                <div class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-sm font-bold tracking-tight">Kinerja Kasir Hari Ini</h2>
-                        <Link v-if="auth.can('/user')" href="/user" class="text-[11px] font-bold text-indigo-400 hover:text-indigo-300">Kelola user →</Link>
-                    </div>
-                    <div class="mt-3 space-y-2.5">
-                        <div v-for="k in kinerjaKasir" :key="k.id" class="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.02] px-3 py-2.5 text-xs">
-                            <div class="flex h-8 w-8 items-center justify-center rounded-md bg-indigo-500/15 text-[11px] font-black text-indigo-300">{{ k.inisial }}</div>
-                            <div class="flex-1"><p class="font-bold">{{ k.nama }}</p><p class="text-[11px] text-slate-500 dark:text-white/40">{{ k.trx }} transaksi</p></div>
-                            <p class="font-black text-emerald-700 dark:text-emerald-400">{{ formatRupiahShort(k.omzet) }}</p>
-                        </div>
-                        <p v-if="!kinerjaKasir.length" class="py-6 text-center text-xs text-slate-400 dark:text-white/30">Belum ada transaksi hari ini.</p>
-                    </div>
-                </div>
-            </div>
-
             <!-- Khusus super admin -->
             <div v-if="auth.role.value === 'super admin'" class="rounded-xl border border-emerald-500/15 bg-emerald-500/[0.04] p-5">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-sm font-bold tracking-tight">🛡️ Panel Super Admin — Kelola Akses</h2>
+                    <h2 class="text-sm font-bold tracking-tight">Kelola Akses</h2>
                     <Link href="/user" class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:text-emerald-300">Buka manajemen user →</Link>
                 </div>
                 <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    <div v-for="u in store.usersAktif.value" :key="u.id_user" class="flex items-center gap-2.5 rounded-lg border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-black/30 px-3 py-2.5 text-xs">
+                    <div v-for="u in panelUsersPaged" :key="u.id_user" class="flex items-center gap-2.5 rounded-lg border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-black/30 px-3 py-2.5 text-xs">
                         <div class="flex h-8 w-8 items-center justify-center rounded-md bg-slate-900/[0.06] dark:bg-white/10 text-[11px] font-black">{{ u.nama_lengkap.slice(0, 1) }}</div>
                         <div class="min-w-0 flex-1"><p class="truncate font-bold">{{ u.nama_lengkap }}</p><p class="text-[10px] text-slate-500 dark:text-white/40">@{{ u.username }} • {{ store.namaSekolah(u.id_sekolah) }}</p></div>
                         <span class="rounded px-1.5 py-0.5 text-[10px] font-black" :class="u.id_role === 1 ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300' : u.id_role === 2 ? 'bg-violet-500/15 text-violet-700 dark:text-violet-300' : 'bg-blue-500/15 text-blue-700 dark:text-blue-300'">{{ store.namaRole(u.id_role) }}</span>
                     </div>
                 </div>
+                <Pagination :page="panelPage" :total-pages="panelTotalPages" @update:page="panelPage = $event" />
             </div>
         </template>
     </div>
@@ -213,6 +144,7 @@ import { computed, defineComponent, h, onMounted, ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 import OmzetChart from '@/components/OmzetChart.vue';
+import Pagination from '@/components/Pagination.vue';
 import { hydrate, usePosStore } from '@/composables/usePosStore';
 import { ROLE_COLOR, ROLE_SCOPE, useAuthMock } from '@/composables/useAuthMock';
 import { dayKey, formatDateTime, formatRupiah, formatRupiahShort, todayKey } from '@/lib/format';
@@ -225,10 +157,14 @@ const store = usePosStore();
 const auth = useAuthMock();
 const { namaPelanggan } = store;
 
-/* Scope sekolah: kasir & admin terkunci di sekolah 1 (satu-satunya sekolah mereka),
-   super admin bisa pilih 0 = semua sekolah. */
-const scopeSekolah = ref(0);
-const scopeId = computed(() => (auth.role.value === 'super admin' ? scopeSekolah.value : 1));
+/* Scope sekolah: kasir & admin terkunci di sekolah akunnya (bukan hardcode),
+   super admin selalu gabungan semua sekolah. */
+const mySchoolId = computed(() => {
+    const me = store.usersAktif.value.find((u) => u.id_user === (auth.user.value?.id_user ?? -1));
+    if (me) return me.id_sekolah;
+    return auth.role.value === 'super admin' ? 0 : 1;
+});
+const scopeId = computed(() => (auth.role.value === 'super admin' ? 0 : (mySchoolId.value || 1)));
 const inScope = (row) => !scopeId.value || (row.id_sekolah ?? 1) === scopeId.value;
 
 const jualScope = computed(() => store.penjualanAktif.value.filter(inScope));
@@ -313,12 +249,24 @@ const omzetScope7 = computed(() => {
     return out;
 });
 const recent = computed(() => [...jualScope.value].sort((a, b) => +new Date(b.tanggal_penjualan) - +new Date(a.tanggal_penjualan)).slice(0, 5));
-const kinerjaKasir = computed(() => {
-    const map = {};
-    for (const t of jualHariIniScope.value) {
-        map[t.id_user] = map[t.id_user] || { id: t.id_user, nama: store.namaUser(t.id_user), inisial: store.namaUser(t.id_user).split(' ').map((w) => w[0]).slice(0, 2).join(''), trx: 0, omzet: 0 };
-        map[t.id_user].trx++; map[t.id_user].omzet += t.total_faktur;
-    }
-    return Object.values(map).sort((a, b) => b.omzet - a.omzet);
+
+/* Paginasi tabel per-sekolah (super admin). */
+const SEKOLAH_PER_PAGE = 6;
+const sekolahPage = ref(1);
+const sekolahTotalPages = computed(() => Math.max(1, Math.ceil(perSekolah.value.length / SEKOLAH_PER_PAGE)));
+const perSekolahPaged = computed(() => {
+    if (sekolahPage.value > sekolahTotalPages.value) sekolahPage.value = sekolahTotalPages.value;
+    const start = (sekolahPage.value - 1) * SEKOLAH_PER_PAGE;
+    return perSekolah.value.slice(start, start + SEKOLAH_PER_PAGE);
+});
+
+/* Paginasi panel kelola akses (super admin). */
+const PANEL_PER_PAGE = 6;
+const panelPage = ref(1);
+const panelTotalPages = computed(() => Math.max(1, Math.ceil(store.usersAktif.value.length / PANEL_PER_PAGE)));
+const panelUsersPaged = computed(() => {
+    if (panelPage.value > panelTotalPages.value) panelPage.value = panelTotalPages.value;
+    const start = (panelPage.value - 1) * PANEL_PER_PAGE;
+    return store.usersAktif.value.slice(start, start + PANEL_PER_PAGE);
 });
 </script>

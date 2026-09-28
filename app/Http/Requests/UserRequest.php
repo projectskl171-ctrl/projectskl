@@ -22,9 +22,12 @@ class UserRequest extends FormRequest
         return [
             'username' => ['required', 'string', 'max:50', Rule::unique('tb_user', 'username')->ignore($id, 'id_user')],
             'nama_lengkap' => ['required', 'string', 'max:100'],
+            // Password dilarang null: saat tambah wajib diisi, saat ubah boleh
+            // DIHILANGKAN dari payload (= tidak diubah), tapi bila dikirim
+            // nilainya wajib string non-null (explicit null ditolak).
             // min:3 agar password dummy "123" tetap valid; keamanan dijamin
             // bcrypt (cast `hashed` di TbUser), bukan panjang minimal.
-            'password' => [$isUpdate ? 'nullable' : 'required', 'string', 'min:3', 'max:100'],
+            'password' => [$isUpdate ? 'sometimes' : 'required', 'string', 'min:3', 'max:100'],
             'id_role' => ['required', 'integer', 'exists:roles,id_role'],
             'id_sekolah' => ['sometimes', 'integer', 'exists:tb_sekolah,id_sekolah'],
             'is_active' => ['sometimes', 'boolean'],

@@ -40,6 +40,14 @@ class AuthController extends Controller
             ]);
         }
 
+        // Sekolah nonaktif => seluruh akun kasir & admin di dalamnya
+        // tidak bisa login (super admin lintas sekolah tetap bisa).
+        if ($user->role?->nama_role !== 'super admin' && $user->sekolah && ! $user->sekolah->is_active) {
+            throw ValidationException::withMessages([
+                'username' => ['Sekolah anda sedang dinonaktifkan. Hubungi super admin.'],
+            ]);
+        }
+
         Auth::login($user, (bool) ($data['remember'] ?? false));
         $request->session()->regenerate();
 

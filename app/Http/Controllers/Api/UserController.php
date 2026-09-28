@@ -66,6 +66,13 @@ class UserController extends Controller
         Tenant::ensureOwnSchool($target, $actor);
         $this->assertManageable($actor, $target);
 
+        // Super admin tidak boleh mengubah username/fullname/password admin
+        // (hanya boleh toggle aktif & hapus). Profil diubah via Settings.
+        $target->loadMissing('role');
+        if ($actor->isSuperAdmin() && $target->role?->nama_role === Role::ADMIN) {
+            abort(403, 'Super admin tidak dapat mengubah profil admin.');
+        }
+
         $data = $request->validated();
         unset($data['id_sekolah']); // sekolah user tidak boleh dipindah via update
         if (empty($data['password'])) {
@@ -119,11 +126,15 @@ class UserController extends Controller
         return response()->json(['message' => 'User berhasil dinonaktifkan.']);
     }
 
-    /** Admin hanya boleh mengelola kasir; cegah privilege escalation. */
+    /** Admin hanya boleh mengelola kasir; akun super admin tidak bisa
+     *  diedit/dinonaktifkan/dihapus lewat manajemen user (pakai Settings). */
     protected function assertManageable(TbUser $actor, TbUser $target): void
     {
         $actor->loadMissing('role');
         $target->loadMissing('role');
+        if ($target->role?->nama_role === Role::SUPER_ADMIN) {
+            abort(403, 'Akun super admin tidak dapat diubah lewat sini.');
+        }
         if ($actor->role?->nama_role === Role::ADMIN && $target->role?->nama_role !== Role::KASIR) {
             abort(403, 'Admin hanya boleh mengelola akun kasir.');
         }

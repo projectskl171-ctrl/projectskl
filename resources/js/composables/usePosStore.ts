@@ -95,11 +95,38 @@ export function hydrate(props: Partial<Record<string, any>>) {
     let touched = false;
     for (const [pk, sk] of Object.entries(map)) {
         if (Array.isArray(props[pk]) && props[pk].length) {
-            (state as any)[sk] = props[pk];
+            (state as any)[sk] = normalizeRows(sk, props[pk]);
             touched = true;
         }
     }
     if (touched) persist();
+}
+
+/* Backend mengirim kolom decimal (total_faktur, subtotal, …) sebagai STRING.
+   Tanpa normalisasi, reduce((s, p) => s + p.total_faktur) jadi concat string
+   ("0150000.00…") => NaN => grafik batang amblas. Koersi di batas hydrate. */
+const NUM_FIELDS: Record<string, string[]> = {
+    barang: ['harga_beli', 'harga_jual', 'stok', 'is_active', 'is_delete', 'id_sekolah', 'id_barang', 'id_kategori', 'id_kelompok_kategori', 'id_supplier'],
+    penjualan: ['total_faktur', 'total_bayar', 'kembalian', 'is_delete', 'id_sekolah', 'id_user', 'id_pelanggan'],
+    pembelian: ['total_bayar', 'is_delete', 'id_sekolah', 'id_supplier', 'id_user'],
+    detailPenjualan: ['jumlah_barang', 'harga_beli', 'harga_jual', 'diskon_nilai', 'diskon_nominal', 'subtotal', 'id_penjualan', 'id_barang'],
+    detailPembelian: ['jumlah', 'harga_beli', 'subtotal', 'id_pembelian', 'id_barang'],
+    users: ['is_active', 'id_sekolah', 'id_role', 'id_user'],
+    sekolah: ['is_active', 'id_sekolah'],
+};
+function normalizeRows(key: keyof State, rows: any[]): any[] {
+    const fields = NUM_FIELDS[key as string];
+    if (!fields) return rows;
+    return rows.map((r) => {
+        const c = { ...r };
+        for (const f of fields) {
+            if (c[f] !== null && c[f] !== undefined && c[f] !== '') {
+                const n = Number(c[f]);
+                if (!Number.isNaN(n)) c[f] = n;
+            }
+        }
+        return c;
+    });
 }
 
 const nextId = (rows: { [k: string]: any }[], key: string): number =>
@@ -172,14 +199,22 @@ export function usePosStore() {
         if (i >= 0) state.sekolah[i] = { ...state.sekolah[i], ...payload };
         persist();
     }
-    /** Aktif/nonaktif sekolah (super admin). Minimal 1 sekolah harus tetap aktif. */
+    /** Aktif/nonaktif sekolah (super admin). Minimal 1 sekolah harus tetap aktif.
+     *  Cascade: akun kasir & admin sekolah itu ikut nonaktif/aktif. */
     function toggleSekolah(id: number): boolean {
         const s = state.sekolah.find((x) => x.id_sekolah === id);
         if (!s) return false;
         if (s.is_active && state.sekolah.filter((x) => x.is_active).length <= 1) return false;
         s.is_active = s.is_active ? 0 : 1;
+        for (const u of state.users) {
+            if (u.id_sekolah === id) u.is_active = s.is_active ? 1 : 0;
+        }
         persist();
         return true;
+    }
+    function deleteSekolah(id: number) {
+        state.sekolah = state.sekolah.filter((x) => x.id_sekolah !== id);
+        persist();
     }
 
     /* ================= BARANG (tb_barang) ================= */
@@ -263,6 +298,10 @@ export function usePosStore() {
     function toggleUser(id: number) {
         const u = state.users.find((x) => x.id_user === id);
         if (u) u.is_active = u.is_active ? 0 : 1;
+        persist();
+    }
+    function deleteUser(id: number) {
+        state.users = state.users.filter((x) => x.id_user !== id);
         persist();
     }
 
@@ -378,7 +417,7 @@ export function usePosStore() {
         statusSekolah, sekolahBelumBayar, detailJual, detailBeli,
         jualHariIni, omzetHariIni, stokMenipis, piutang, omzet7Hari,
         saveBarang, deleteBarang, savePelanggan, deletePelanggan,
-        saveSupplier, deleteSupplier, saveUser, toggleUser, saveSekolah, toggleSekolah,
+        saveSupplier, deleteSupplier, saveUser, toggleUser, deleteUser, saveSekolah, toggleSekolah, deleteSekolah,
         createPenjualan, voidPenjualan, createPembelian, selesaikanPembelian, deletePembelian,
     };
 }

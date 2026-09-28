@@ -74,12 +74,13 @@ import { formatRupiah, formatRupiahShort } from '@/lib/format';
 const props = defineProps({
     data: { type: Array, default: () => [] }, // [{ label, key, total, trx }]
     title: { type: String, default: 'Omzet 7 Hari Terakhir' },
-    subtitle: { type: String, default: 'tb_penjualan • total_faktur per hari' },
+    subtitle: { type: String, default: 'total faktur per hari' },
 });
 
 const mode = ref('bar');
-const total = computed(() => props.data.reduce((s, d) => s + (d.total || 0), 0));
-const maxVal = computed(() => Math.max(1, ...props.data.map((d) => d.total || 0)));
+const num = (v) => Number(v) || 0;
+const total = computed(() => props.data.reduce((s, d) => s + num(d.total), 0));
+const maxVal = computed(() => Math.max(1, ...props.data.map((d) => num(d.total))));
 
 /* ---------- warna grid/titik mengikuti tema (dark final, light slate) ---------- */
 const isDarkChart = () => typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
@@ -93,7 +94,7 @@ const points = computed(() => {
     const max = maxVal.value;
     return props.data.map((d, i) => ({
         x: PAD + (n === 1 ? (W - 2 * PAD) / 2 : (i * (W - 2 * PAD)) / (n - 1)),
-        y: H - PAD - ((d.total || 0) / max) * (H - 2 * PAD - 8),
+        y: H - PAD - (num(d.total) / max) * (H - 2 * PAD - 8),
     }));
 });
 const linePath = computed(() => points.value.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' '));

@@ -22,6 +22,16 @@ class NotifikasiController extends Controller
     {
         $user = $request->user();
         $role = $user->roleName();
+
+        // Super admin tidak butuh stok/piutang/draft: cukup info
+        // sekolah & admin yang bertambah hari ini.
+        if (Tenant::isSuperAdmin($user)) {
+            return response()->json([
+                'data' => $this->superAdminHariIni(),
+                'total' => count($this->superAdminHariIni()),
+            ]);
+        }
+
         $items = [];
 
         $schoolFilter = fn ($q) => Tenant::isSuperAdmin($user) ? $q : $q->where('id_sekolah', $user->id_sekolah);
@@ -50,18 +60,34 @@ class NotifikasiController extends Controller
             $items[] = ['tipe' => 'piutang', 'judul' => 'Kredit belum lunas', 'pesan' => "{$piutang} transaksi kredit belum dibayar.", 'jumlah' => $piutang];
         }
 
-        // Monitoring lintas sekolah (super admin).
-        if (Tenant::isSuperAdmin($user)) {
-            $sekolahOff = TbSekolah::where('is_active', 0)->count();
-            if ($sekolahOff > 0) {
-                $items[] = ['tipe' => 'sekolah_nonaktif', 'judul' => 'Sekolah nonaktif', 'pesan' => "{$sekolahOff} sekolah berstatus nonaktif.", 'jumlah' => $sekolahOff];
-            }
-            $userOff = TbUser::where('is_active', 0)->count();
-            if ($userOff > 0) {
-                $items[] = ['tipe' => 'user_nonaktif', 'judul' => 'User nonaktif', 'pesan' => "{$userOff} akun user berstatus nonaktif.", 'jumlah' => $userOff];
-            }
+        return response()->json(['data' => $items, 'total' => count($items)]);
+    }
+
+    /** Super admin: sekolah & admin yang bertambah hari ini saja. */
+    protected function superAdminHariIni(): array
+    {
+        $items = [];
+        $today = today()->toDateString();
+
+        $sekolahBaru = TbSekolah::whereDate('created_at', $today)->orderBy('id_sekolah')->get();
+        foreach ($sekolahBaru as $s) {
+            $items[] = [
+                'tipe' => 'sekolah_baru', 'judul' => "Sekolah baru: {$s->nama_sekolah}",
+                'pesan' => "{$s->kode_sekolah} • terdaftar hari ini.", 'jumlah' => 1,
+            ];
         }
 
-        return response()->json(['data' => $items, 'total' => count($items)]);
+        $adminBaru = TbUser::whereDate('created_at', $today)
+            ->whereHas('role', fn ($q) => $q->where('nama_role', 'admin'))
+            ->with('sekolah:id_sekolah,nama_sekolah')
+            ->orderBy('id_user')->get();
+        foreach ($adminBaru as $u) {
+            $items[] = [
+                'tipe' => 'admin_baru', 'judul' => "Admin baru: {$u->nama_lengkap}",
+                'pesan' => "@{$u->username} • ".($u->sekolah?->nama_sekolah ?? 'tanpa sekolah').' • hari ini.', 'jumlah' => 1,
+            ];
+        }
+
+        return $items;
     }
 }

@@ -46,12 +46,12 @@ export const ROLE_COLOR: Record<MockRole, string> = {
 
 /* Matriks akses menu per peran (key = href sidebar).
    kasir: Dashboard, Transaksi, Riwayat Transaksi, Pelanggan, Notifikasi, Settings.
-   admin: Dashboard, Produk, Pembelian, Supplier, User, Laporan, Notifikasi.
-   super admin: Dashboard, Sekolah, User, Laporan, Notifikasi. */
+   admin: Dashboard, Produk, Pembelian, Supplier, User, Laporan, Notifikasi, Settings.
+   super admin: Dashboard, Sekolah, User, Laporan, Notifikasi, Settings. */
 const MATRIX: Record<MockRole, string[]> = {
     kasir: ['/dashboard', '/transaksi', '/riwayat-transaksi', '/pelanggan', '/notifikasi', '/settings'],
-    admin: ['/dashboard', '/produk', '/pembelian', '/supplier', '/user', '/laporan', '/notifikasi'],
-    'super admin': ['/dashboard', '/sekolah', '/user', '/laporan', '/notifikasi'],
+    admin: ['/dashboard', '/produk', '/pembelian', '/supplier', '/user', '/laporan', '/notifikasi', '/settings'],
+    'super admin': ['/dashboard', '/sekolah', '/user', '/laporan', '/notifikasi', '/settings'],
 };
 
 /* Tidak ada halaman read-only lagi: kasir boleh CRUD pelanggan.

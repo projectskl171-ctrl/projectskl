@@ -25,7 +25,7 @@
                     <th class="px-4 py-2.5">Barang (barcode)</th><th class="px-3 py-2.5">Kategori</th><th class="px-3 py-2.5 text-right">Beli → Jual</th><th class="px-3 py-2.5 text-right">Margin</th><th class="px-3 py-2.5 text-right">Stok</th><th class="px-3 py-2.5 text-right">Aksi</th>
                 </tr></thead>
                 <tbody>
-                    <tr v-for="b in filtered" :key="b.id_barang" class="border-t border-slate-200 dark:border-white/[0.05] hover:bg-emerald-600/5 dark:hover:bg-white/[0.02]">
+                    <tr v-for="b in paged" :key="b.id_barang" class="border-t border-slate-200 dark:border-white/[0.05] hover:bg-emerald-600/5 dark:hover:bg-white/[0.02]">
                         <td class="px-4 py-2.5"><p class="font-bold">{{ b.nama }}</p><p class="font-mono text-[10px] text-slate-400 dark:text-white/30">{{ b.barcode }} • {{ b.satuan }} • {{ store.namaSupplier(b.id_supplier) }}</p></td>
                         <td class="px-3 py-2.5"><span class="rounded bg-slate-900/[0.04] dark:bg-white/5 px-1.5 py-0.5 text-[10px] font-bold text-slate-600 dark:text-white/60">{{ store.namaKategori(b.id_kategori) }}</span><p class="mt-0.5 text-[10px] text-slate-400 dark:text-white/30">{{ store.namaKelompok(b.id_kelompok_kategori) }}</p></td>
                         <td class="px-3 py-2.5 text-right whitespace-nowrap text-slate-500 dark:text-white/50">{{ formatRupiahShort(b.harga_beli) }} → <span class="font-bold text-slate-900 dark:text-white">{{ formatRupiahShort(b.harga_jual) }}</span></td>
@@ -40,7 +40,7 @@
             </table>
             <p v-if="!filtered.length" class="py-10 text-center text-sm text-slate-400 dark:text-white/30">Tidak ada produk.</p>
         </div>
-        <p class="text-[11px] text-slate-400 dark:text-white/25">tb_barang • soft-delete via is_delete • harga_beli = HPP terakhir dari tb_detail_pembelian</p>
+        <Pagination :page="page" :total-pages="totalPages" @update:page="page = $event" />
     </div>
 
     <div v-if="show && auth.can('/produk')" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" @click.self="show = false">
@@ -72,6 +72,8 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
+import Pagination from '@/components/Pagination.vue';
+import { usePagination } from '@/composables/usePagination';
 import { hydrate, usePosStore } from '@/composables/usePosStore';
 import RoleDenied from '@/components/RoleDenied.vue';
 import { useAuthMock } from '@/composables/useAuthMock';
@@ -85,12 +87,12 @@ const auth = useAuthMock();
 const q = ref(''), fKat = ref(0), fStok = ref(''), show = ref(false);
 const form = ref({});
 
-const filtered = computed(() => store.barangAktif.value.filter((b) => {
+const { page, totalPages, paged, filtered } = usePagination(() => store.barangAktif.value.filter((b) => {
     const okQ = !q.value || b.nama.toLowerCase().includes(q.value.toLowerCase()) || b.barcode.includes(q.value);
     const okK = !fKat.value || b.id_kategori === Number(fKat.value);
     const okS = !fStok.value || (fStok.value === 'habis' && b.stok === 0) || (fStok.value === 'tipis' && b.stok <= 10) || (fStok.value === 'aman' && b.stok > 10);
     return okQ && okK && okS;
-}).sort((a, b) => a.nama.localeCompare(b.nama)));
+}).sort((a, b) => a.nama.localeCompare(b.nama)), 15, [q, fKat, fStok]);
 const margin = (b) => b.harga_beli ? Math.round(((b.harga_jual - b.harga_beli) / b.harga_beli) * 100) : 0;
 const stats = computed(() => [
     { label: 'Total SKU', value: store.barangAktif.value.length },

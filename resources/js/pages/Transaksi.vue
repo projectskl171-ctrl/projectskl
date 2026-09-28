@@ -14,8 +14,8 @@
                     <option v-for="k in store.state.kategori" :key="k.id_kategori" :value="k.id_kategori">{{ k.nama }}</option>
                 </select>
             </div>
-            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-2 2xl:grid-cols-3">
-                <button v-for="b in filtered" :key="b.id_barang" @click="add(b)"
+            <div class="grid max-h-[560px] grid-cols-2 gap-3 overflow-y-auto pr-0.5 sm:grid-cols-3 lg:grid-cols-2 2xl:grid-cols-3">
+                <button v-for="b in paged" :key="b.id_barang" @click="add(b)"
                     :disabled="b.stok <= 0 || !b.is_active"
                     class="group rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-3.5 text-left transition-all hover:border-emerald-500/40 hover:bg-emerald-500/[0.06] disabled:cursor-not-allowed disabled:opacity-40">
                     <div class="flex items-start justify-between gap-2">
@@ -30,6 +30,7 @@
                 </button>
             </div>
             <p v-if="!filtered.length" class="rounded-xl border border-dashed border-slate-200 dark:border-white/10 py-10 text-center text-sm text-slate-400 dark:text-white/30">Produk tidak ditemukan.</p>
+            <Pagination :page="page" :total-pages="totalPages" @update:page="page = $event" />
         </div>
 
         <!-- KERANJANG (kanan — submit di sini, sticky) -->
@@ -124,6 +125,8 @@ import { computed, onMounted, ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 import RoleDenied from '@/components/RoleDenied.vue';
+import Pagination from '@/components/Pagination.vue';
+import { usePagination } from '@/composables/usePagination';
 import { hydrate, usePosStore } from '@/composables/usePosStore';
 import { useAuthMock } from '@/composables/useAuthMock';
 import { formatDateTime, formatRupiah, formatRupiahShort } from '@/lib/format';
@@ -138,11 +141,11 @@ const q = ref(''), katFilter = ref(0), cart = ref([]), idPelanggan = ref(null);
 const caraBayar = ref('Tunai'), jenis = ref('tunai'), bayar = ref(0);
 const err = ref(''), struk = ref(null);
 
-const filtered = computed(() => store.barangAktif.value.filter((b) => {
+const { page, totalPages, paged, filtered } = usePagination(() => store.barangAktif.value.filter((b) => {
     const okQ = !q.value || b.nama.toLowerCase().includes(q.value.toLowerCase()) || b.barcode.includes(q.value);
     const okK = !katFilter.value || b.id_kategori === Number(katFilter.value);
     return okQ && okK;
-}));
+}), 12, [q, katFilter]);
 const price = (id) => store.state.barang.find((b) => b.id_barang === id)?.harga_jual ?? 0;
 const lineSub = (l) => price(l.id_barang) * l.qty * (1 - (l.diskon_persen || 0) / 100);
 const total = computed(() => cart.value.reduce((s, l) => s + lineSub(l), 0));
