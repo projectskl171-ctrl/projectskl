@@ -16,7 +16,7 @@ test('login screen redirects to the single AuthPage entry', function () {
 
 test('users can authenticate with username and password', function () {
     $response = $this->post(route('login.store'), [
-        'username' => 'sch001_kasir',
+        'username' => 'smkn1_kasir01',
         'password' => '123',
     ]);
 
@@ -26,11 +26,11 @@ test('users can authenticate with username and password', function () {
 
 test('users can authenticate via the JSON API', function () {
     $response = $this->postJson('/api/auth/login', [
-        'username' => 'sch001_admin',
+        'username' => 'smkn1_admin01',
         'password' => '123',
     ]);
 
-    $response->assertOk()->assertJsonPath('data.username', 'sch001_admin');
+    $response->assertOk()->assertJsonPath('data.username', 'smkn1_admin01');
     $response->assertJsonPath('data.role', 'admin');
     $response->assertJsonMissingPath('data.password');
     $this->assertAuthenticated();
@@ -38,7 +38,7 @@ test('users can authenticate via the JSON API', function () {
 
 test('users can not authenticate with invalid password', function () {
     $response = $this->postJson('/api/auth/login', [
-        'username' => 'sch001_kasir',
+        'username' => 'smkn1_kasir01',
         'password' => 'wrong-password',
     ]);
 
@@ -47,11 +47,11 @@ test('users can not authenticate with invalid password', function () {
 });
 
 test('inactive users can not authenticate', function () {
-    $user = TbUser::where('username', 'sch001_kasir')->firstOrFail();
+    $user = TbUser::where('username', 'smkn1_kasir01')->firstOrFail();
     $user->update(['is_active' => 0]);
 
     $response = $this->postJson('/api/auth/login', [
-        'username' => 'sch001_kasir',
+        'username' => 'smkn1_kasir01',
         'password' => '123',
     ]);
 
@@ -60,7 +60,7 @@ test('inactive users can not authenticate', function () {
 });
 
 test('users can logout via the JSON API', function () {
-    $user = TbUser::where('username', 'sch001_kasir')->firstOrFail();
+    $user = TbUser::where('username', 'smkn1_kasir01')->firstOrFail();
 
     $response = $this->actingAs($user)->postJson('/api/auth/logout');
 
@@ -69,10 +69,10 @@ test('users can logout via the JSON API', function () {
 });
 
 test('users are rate limited', function () {
-    RateLimiter::increment(md5('login'.implode('|', ['sch001_kasir', '127.0.0.1'])), amount: 5);
+    RateLimiter::increment(md5('login'.implode('|', ['smkn1_kasir01', '127.0.0.1'])), amount: 5);
 
     $response = $this->post(route('login.store'), [
-        'username' => 'sch001_kasir',
+        'username' => 'smkn1_kasir01',
         'password' => 'wrong-password',
     ]);
 

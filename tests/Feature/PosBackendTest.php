@@ -18,7 +18,7 @@ function posUser(string $username): TbUser
 // ---------- authentication & seed ----------
 
 test('seeded users can login with password "password"', function () {
-    foreach (['sch001_superadmin', 'sch001_admin', 'sch001_kasir'] as $username) {
+    foreach (['superadmin', 'smkn1_admin01', 'smkn1_kasir01'] as $username) {
         $response = $this->postJson('/api/auth/login', ['username' => $username, 'password' => '123']);
         $response->assertOk()->assertJsonPath('data.username', $username);
         $this->postJson('/api/auth/logout')->assertOk();
@@ -26,7 +26,7 @@ test('seeded users can login with password "password"', function () {
 });
 
 test('user responses never expose password hashes', function () {
-    $admin = posUser('sch001_superadmin');
+    $admin = posUser('superadmin');
     $this->actingAs($admin);
 
     $this->getJson('/api/users')->assertOk()
@@ -38,7 +38,7 @@ test('user responses never expose password hashes', function () {
 // ---------- tenant isolation ----------
 
 test('admin only sees own school products', function () {
-    $admin = posUser('sch001_admin');
+    $admin = posUser('smkn1_admin01');
     $this->actingAs($admin);
 
     $res = $this->getJson('/api/produk?per_page=200')->assertOk();
@@ -53,7 +53,7 @@ test('admin only sees own school products', function () {
 });
 
 test('cross-school foreign keys are rejected on product create', function () {
-    $admin = posUser('sch001_admin');
+    $admin = posUser('smkn1_admin01');
     $this->actingAs($admin);
 
     $supplierLain = \App\Models\TbSupplier::where('id_sekolah', '!=', $admin->id_sekolah)->firstOrFail();
@@ -71,7 +71,7 @@ test('cross-school foreign keys are rejected on product create', function () {
 // ---------- role authorization ----------
 
 test('kasir can not manage products or users', function () {
-    $kasir = posUser('sch001_kasir');
+    $kasir = posUser('smkn1_kasir01');
     $this->actingAs($kasir);
 
     $this->postJson('/api/produk', [])->assertForbidden();
@@ -80,7 +80,7 @@ test('kasir can not manage products or users', function () {
 });
 
 test('admin can not grant super admin role', function () {
-    $admin = posUser('sch001_admin');
+    $admin = posUser('smkn1_admin01');
     $this->actingAs($admin);
 
     $superRole = \App\Models\Role::where('nama_role', 'super admin')->firstOrFail();
@@ -91,7 +91,7 @@ test('admin can not grant super admin role', function () {
 });
 
 test('admin created users are forced into own school', function () {
-    $admin = posUser('sch001_admin');
+    $admin = posUser('smkn1_admin01');
     $this->actingAs($admin);
 
     $kasirRole = \App\Models\Role::where('nama_role', 'kasir')->firstOrFail();
@@ -109,7 +109,7 @@ test('admin created users are forced into own school', function () {
 // ---------- produk & supplier CRUD ----------
 
 test('produk CRUD persists to database', function () {
-    $admin = posUser('sch001_admin');
+    $admin = posUser('smkn1_admin01');
     $this->actingAs($admin);
 
     $kategori = \App\Models\TbKategori::whereHas('kelompok', fn ($q) => $q->where('id_sekolah', $admin->id_sekolah))->firstOrFail();
@@ -140,7 +140,7 @@ test('produk CRUD persists to database', function () {
 });
 
 test('supplier CRUD persists and stays in own school', function () {
-    $admin = posUser('sch001_admin');
+    $admin = posUser('smkn1_admin01');
     $this->actingAs($admin);
 
     $created = $this->postJson('/api/supplier', [
@@ -154,7 +154,7 @@ test('supplier CRUD persists and stays in own school', function () {
 // ---------- pelanggan ----------
 
 test('pelanggan CRUD validates kelompok tenant', function () {
-    $kasir = posUser('sch001_kasir');
+    $kasir = posUser('smkn1_kasir01');
     $this->actingAs($kasir);
 
     $kpLain = \App\Models\TbKelompokPelanggan::where('id_sekolah', '!=', $kasir->id_sekolah)->firstOrFail();
@@ -175,7 +175,7 @@ test('pelanggan CRUD validates kelompok tenant', function () {
 // ---------- pembelian ----------
 
 test('pembelian draft does not add stock, selesai does exactly once', function () {
-    $admin = posUser('sch001_admin');
+    $admin = posUser('smkn1_admin01');
     $this->actingAs($admin);
 
     $supplier = \App\Models\TbSupplier::where('id_sekolah', $admin->id_sekolah)->firstOrFail();
@@ -207,7 +207,7 @@ test('pembelian draft does not add stock, selesai does exactly once', function (
 // ---------- penjualan ----------
 
 test('penjualan computes totals server-side and decrements stock', function () {
-    $kasir = posUser('sch001_kasir');
+    $kasir = posUser('smkn1_kasir01');
     $this->actingAs($kasir);
 
     $a = TbBarang::where('id_sekolah', $kasir->id_sekolah)->orderBy('id_barang')->firstOrFail();
@@ -236,7 +236,7 @@ test('penjualan computes totals server-side and decrements stock', function () {
 });
 
 test('penjualan rejects overstock and underpaid cash', function () {
-    $kasir = posUser('sch001_kasir');
+    $kasir = posUser('smkn1_kasir01');
     $this->actingAs($kasir);
 
     $barang = TbBarang::where('id_sekolah', $kasir->id_sekolah)->firstOrFail();
@@ -256,7 +256,7 @@ test('penjualan rejects overstock and underpaid cash', function () {
 });
 
 test('kredit sale with partial payment becomes piutang', function () {
-    $kasir = posUser('sch001_kasir');
+    $kasir = posUser('smkn1_kasir01');
     $this->actingAs($kasir);
 
     $barang = TbBarang::where('id_sekolah', $kasir->id_sekolah)->firstOrFail();
@@ -271,7 +271,7 @@ test('kredit sale with partial payment becomes piutang', function () {
 });
 
 test('void restores stock and kasir can not void others transactions', function () {
-    $kasir = posUser('sch001_kasir');
+    $kasir = posUser('smkn1_kasir01');
     $this->actingAs($kasir);
 
     $barang = TbBarang::where('id_sekolah', $kasir->id_sekolah)->firstOrFail();
@@ -297,7 +297,7 @@ test('void restores stock and kasir can not void others transactions', function 
 // ---------- dashboard, laporan, notifikasi ----------
 
 test('dashboard returns real database numbers', function () {
-    $admin = posUser('sch001_admin');
+    $admin = posUser('smkn1_admin01');
     $this->actingAs($admin);
 
     $res = $this->getJson('/api/dashboard')->assertOk()->json('data');
@@ -309,7 +309,7 @@ test('dashboard returns real database numbers', function () {
 });
 
 test('laporan and notifikasi reflect database state', function () {
-    $admin = posUser('sch001_admin');
+    $admin = posUser('smkn1_admin01');
     $this->actingAs($admin);
 
     $this->getJson('/api/laporan/stok')->assertOk()->assertJsonPath('ringkasan.stok_menipis', countMenipis($admin));

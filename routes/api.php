@@ -42,6 +42,7 @@ Route::middleware('web')->group(function () {
             Route::post('/sekolah', [SekolahController::class, 'store'])->name('api.sekolah.store');
             Route::put('/sekolah/{id}', [SekolahController::class, 'update'])->name('api.sekolah.update');
             Route::patch('/sekolah/{id}/toggle', [SekolahController::class, 'toggle'])->name('api.sekolah.toggle');
+            Route::post('/sekolah/{id}/perpanjang', [SekolahController::class, 'perpanjang'])->name('api.sekolah.perpanjang');
             Route::delete('/sekolah/{id}', [SekolahController::class, 'destroy'])->name('api.sekolah.destroy');
         });
 
@@ -128,6 +129,8 @@ Route::middleware('web')->group(function () {
         Route::get('/laporan/pembelian', [LaporanController::class, 'pembelian'])->name('api.laporan.pembelian');
         Route::get('/laporan/stok', [LaporanController::class, 'stok'])->name('api.laporan.stok');
         Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('api.notifikasi');
+        Route::post('/notifikasi/read-all', [NotifikasiController::class, 'readAll'])->name('api.notifikasi.readAll');
+        Route::post('/notifikasi/{id}/read', [NotifikasiController::class, 'read'])->name('api.notifikasi.read');
     }); // end auth group
 
 }); // end web group

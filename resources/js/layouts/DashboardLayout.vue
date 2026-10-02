@@ -19,37 +19,43 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <!-- NOTIF -->
+                    <!-- NOTIF (DB persisten + badge angka merah) -->
                     <div class="relative">
                         <button
                             type="button"
                             @click="notifOpen = !notifOpen"
                             title="Notifikasi"
-                            class="relative flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.02] text-slate-600 dark:text-white/60 transition-all hover:bg-emerald-600/5 dark:hover:bg-white/[0.06] hover:text-slate-900 dark:hover:text-white"
+                            class="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.02] text-slate-600 dark:text-white/60 transition-all hover:bg-emerald-600/5 dark:hover:bg-white/[0.06] hover:text-slate-900 dark:hover:text-white"
                         >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-[17px] w-[17px]">
                                 <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
                                 <path d="M13.73 21a2 2 0 01-3.46 0" />
                             </svg>
-                            <span v-if="alerts.length" class="absolute top-2 right-2.5 h-1.5 w-1.5 rounded-full bg-rose-500 ring-2 ring-white dark:ring-[#0a0a0a]" />
+                            <span v-if="unread > 0" class="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-black text-white ring-2 ring-white dark:ring-[#0a0a0a]">{{ unread > 99 ? '99+' : unread }}</span>
                         </button>
                         <!-- dropdown ringkas -->
                         <div v-if="notifOpen"
-                            class="absolute top-11 right-0 w-80 overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#111] shadow-2xl shadow-slate-900/10 dark:shadow-black/60">
+                            class="absolute top-11 right-0 z-30 w-80 overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#111] shadow-2xl shadow-slate-900/10 dark:shadow-black/60">
                             <div class="flex items-center justify-between border-b border-slate-200 dark:border-white/[0.06] px-4 py-2.5">
-                                <p class="text-xs font-black">Notifikasi <span class="text-slate-400 dark:text-white/30">({{ alerts.length }})</span></p>
-                                <button @click="goNotif" class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:text-emerald-300">Lihat semua →</button>
+                                <p class="text-xs font-black">Notifikasi <span class="text-slate-400 dark:text-white/30">({{ unread }} baru)</span></p>
+                                <div class="flex items-center gap-2">
+                                    <button v-if="unread > 0" @click="readAll" class="cursor-pointer text-[11px] font-bold text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white">Tandai dibaca</button>
+                                    <button @click="goNotif" class="cursor-pointer text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:text-emerald-300">Lihat semua →</button>
+                                </div>
                             </div>
                             <div class="max-h-80 overflow-y-auto py-1.5">
-                                <button v-for="(a, i) in alerts.slice(0, 6)" :key="i" @click="goAlert(a)"
-                                    class="flex w-full items-start gap-2.5 px-4 py-2.5 text-left hover:bg-emerald-600/5 dark:hover:bg-white/5">
-                                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs" :class="a.cls">{{ a.icon }}</span>
+                                <button v-for="a in notifs.slice(0, 6)" :key="a.id_notifikasi" @click="goAlert(a)"
+                                    class="flex w-full cursor-pointer items-start gap-2.5 px-4 py-2.5 text-left hover:bg-emerald-600/5 dark:hover:bg-white/5"
+                                    :class="!Number(a.is_read) && 'bg-emerald-500/[0.06]'">
+                                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs" :class="iconCls(a.tipe)">{{ iconEmoji(a.tipe) }}</span>
                                     <span class="min-w-0 flex-1">
-                                        <span class="block text-xs font-bold">{{ a.title }}</span>
-                                        <span class="block truncate text-[11px] text-slate-500 dark:text-white/40">{{ a.sub }}</span>
+                                        <span class="flex items-center gap-1.5 text-xs font-bold">{{ a.judul }}
+                                            <span v-if="!Number(a.is_read)" class="rounded bg-rose-500 px-1 py-px text-[8px] font-black text-white">BARU</span>
+                                        </span>
+                                        <span class="block truncate text-[11px] text-slate-500 dark:text-white/40">{{ a.pesan }}</span>
                                     </span>
                                 </button>
-                                <p v-if="!alerts.length" class="px-4 py-6 text-center text-xs text-slate-400 dark:text-white/30">Aman! Tidak ada peringatan. 🎉</p>
+                                <p v-if="!notifs.length" class="px-4 py-6 text-center text-xs text-slate-400 dark:text-white/30">Aman! Tidak ada peringatan. 🎉</p>
                             </div>
                         </div>
                     </div>
@@ -59,7 +65,7 @@
                         type="button"
                         @click="goSettings"
                         title="Buka pengaturan"
-                        class="group flex h-9 items-center gap-2.5 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.02] pr-2 pl-1 transition-all hover:bg-emerald-600/5 dark:hover:bg-white/[0.06]"
+                        class="group flex h-9 cursor-pointer items-center gap-2.5 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.02] pr-2 pl-1 transition-all hover:bg-emerald-600/5 dark:hover:bg-white/[0.06]"
                     >
                         <div class="flex h-7 w-7 items-center justify-center rounded-md text-[10px] font-black text-white"
                             :style="{ background: ROLE_COLOR[auth.role.value] }">
@@ -79,8 +85,9 @@
             <!-- klik di luar menutup dropdown -->
             <div v-if="notifOpen" @click="closeAll" class="fixed inset-0 z-10"></div>
 
-            <!-- PAGE CONTENT -->
-            <main class="relative z-0 flex-1 p-6">
+            <!-- PAGE CONTENT (tanpa z-0: agar modal fixed z-50 di dalam slot
+                 bisa menutup sidebar z-30 & header z-20, bukan cuma content) -->
+            <main class="relative flex-1 p-6">
                 <slot />
             </main>
         </div>
@@ -88,18 +95,15 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import DashboardSidebar from '@/components/DashboardSidebar.vue';
 import { ROLE_COLOR, syncAuthFromServer, useAuthMock } from '@/composables/useAuthMock';
-import { usePosStore } from '@/composables/usePosStore';
-import { dayKey, formatRupiahShort, todayKey } from '@/lib/format';
+import { apiFetch } from '@/lib/api';
 
 const auth = useAuthMock();
-const store = usePosStore();
 /* Klik foto/nama profil = masuk ke Settings (bukan logout). */
 function goSettings() { closeAll(); router.visit('/settings'); }
-function goAlert(a) { closeAll(); router.visit(a.href); }
 
 const page = usePage();
 const pageTitle = computed(() => page.props.title || 'Dashboard');
@@ -107,62 +111,61 @@ const pageSubtitle = computed(() => page.props.subtitle || 'Ringkasan aktivitas'
 
 /* Sinkron peran ke session server saat layout naik. Mencegah menu basi
    (localStorage peran lama) yang diklik lalu mental ke dashboard. */
+let poll = null;
 onMounted(async () => {
     const status = await syncAuthFromServer();
     if (status === 'unauthorized') router.visit('/');
+    fetchNotifs();
+    poll = setInterval(fetchNotifs, 15000);
 });
+onUnmounted(() => { if (poll) clearInterval(poll); });
 
-/* ================= NOTIFIKASI (ringkasan + badge, beda per peran) =================
-   ATURAN: setiap alert hanya boleh link ke halaman yang BISA dibuka peran itu.
-   - kasir  : /pelanggan, /transaksi, /riwayat-transaksi
-   - admin  : /produk, /pembelian, /laporan
-   - super admin : hanya sekolah & admin baru hari ini (/sekolah, /user) */
+/* ================= NOTIFIKASI DB (tb_notifikasi, badge angka merah) ================= */
 const notifOpen = ref(false);
-const role = computed(() => auth.role.value);
-const alerts = computed(() => {
-    const out = [];
-    // ---- KASIR: pelanggan + shift sendiri, href aman untuk kasir ----
-    if (role.value === 'kasir') {
-        const semingguLalu = Date.now() - 7 * 86400000;
-        const baru = store.pelangganAktif.value.filter((p) => +new Date(p.created_at) >= semingguLalu);
-        if (baru.length)
-            out.push({ icon: '🆕', cls: 'bg-pink-500/15 text-pink-700 dark:text-pink-300', title: `${baru.length} pelanggan baru minggu ini`, sub: baru.slice(0, 2).map((p) => p.nama_pelanggan).join(', '), href: '/pelanggan' });
-        const piutang = store.piutang.value;
-        if (piutang.length)
-            out.push({ icon: '💸', cls: 'bg-orange-500/15 text-orange-700 dark:text-orange-300', title: `${piutang.length} piutang belum bayar`, sub: `Total ${formatRupiahShort(piutang.reduce((s, t) => s + t.total_faktur, 0))} — hubungi pelanggan`, href: '/pelanggan' });
-        const myId = auth.user.value?.id_user ?? -1;
-        const shift = store.penjualanAktif.value.filter((p) => dayKey(p.tanggal_penjualan) === todayKey() && p.id_user === myId).length;
-        out.push({ icon: '🧾', cls: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', title: `${shift} transaksi shift saya hari ini`, sub: 'Lihat di riwayat transaksi', href: '/riwayat-transaksi' });
-        return out;
-    }
-    // ---- ADMIN: barang/stok. Super admin ditangani di blok bawah. ----
-    const habis = store.barangAktif.value.filter((b) => b.stok === 0);
-    const tipis = store.barangAktif.value.filter((b) => b.stok > 0 && b.stok <= 10);
-    for (const b of habis.slice(0, 3))
-        out.push({ icon: '⛔', cls: 'bg-rose-500/15 text-rose-700 dark:text-rose-300', title: `Stok habis: ${b.nama}`, sub: role.value === 'admin' ? 'Segera restock via Pembelian' : 'Lihat di Notifikasi', href: role.value === 'admin' ? '/pembelian' : '/notifikasi' });
-    if (tipis.length)
-        out.push({ icon: '⚠️', cls: 'bg-amber-500/15 text-amber-700 dark:text-amber-300', title: `${tipis.length} barang stok menipis (≤10)`, sub: tipis.slice(0, 2).map((b) => b.nama).join(', '), href: role.value === 'admin' ? '/produk' : '/notifikasi' });
-    // ---- ADMIN: + draft pembelian (operasional toko) ----
-    if (role.value === 'admin') {
-        const draft = store.pembelianAktif.value.filter((p) => p.status_pembelian === 'draft');
-        if (draft.length)
-            out.push({ icon: '📥', cls: 'bg-violet-500/15 text-violet-700 dark:text-violet-300', title: `${draft.length} pembelian masih draft`, sub: 'Selesaikan agar stok bertambah', href: '/pembelian' });
-        const today = store.penjualanAktif.value.filter((p) => dayKey(p.tanggal_penjualan) === todayKey()).length;
-        out.push({ icon: '🧾', cls: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', title: `${today} transaksi hari ini`, sub: 'Pantau di laporan', href: '/laporan' });
-        return out;
-    }
-    // ---- SUPER ADMIN: hanya sekolah & admin yang bertambah hari ini ----
-    if (role.value === 'super admin') {
-        const today = todayKey();
-        const sekolahBaru = store.state.sekolah.filter((s) => s.created_at && dayKey(s.created_at) === today);
-        for (const s of sekolahBaru.slice(0, 3))
-            out.push({ icon: '🏫', cls: 'bg-sky-500/15 text-sky-700 dark:text-sky-300', title: `Sekolah baru: ${s.nama_sekolah}`, sub: `${s.kode_sekolah} • terdaftar hari ini`, href: '/sekolah' });
-        const adminBaru = store.usersAktif.value.filter((u) => u.id_role === 2 && u.created_at && dayKey(u.created_at) === today);
-        for (const u of adminBaru.slice(0, 3))
-            out.push({ icon: '👤', cls: 'bg-violet-500/15 text-violet-700 dark:text-violet-300', title: `Admin baru: ${u.nama_lengkap}`, sub: `@${u.username} • ${store.namaSekolah(u.id_sekolah)}`, href: '/user' });
-    }
-    return out;
-});
+const notifs = ref([]);
+const unread = ref(0);
+
+function iconEmoji(tipe) {
+    if (tipe?.startsWith('kredit')) return '💸';
+    if (tipe?.startsWith('omzet')) return '🎉';
+    if (tipe === 'stok_habis') return '⛔';
+    if (tipe === 'stok_menipis') return '⚠️';
+    if (tipe?.startsWith('sekolah')) return '🏫';
+    return '🔔';
+}
+function iconCls(tipe) {
+    if (tipe?.startsWith('kredit')) return 'bg-orange-500/15 text-orange-700 dark:text-orange-300';
+    if (tipe?.startsWith('omzet')) return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300';
+    if (tipe === 'stok_habis') return 'bg-rose-500/15 text-rose-700 dark:text-rose-300';
+    if (tipe === 'stok_menipis') return 'bg-amber-500/15 text-amber-700 dark:text-amber-300';
+    if (tipe?.startsWith('sekolah')) return 'bg-sky-500/15 text-sky-700 dark:text-sky-300';
+    return 'bg-slate-500/15 text-slate-600 dark:text-white/60';
+}
+async function fetchNotifs() {
+    try {
+        const json = await apiFetch('/api/notifikasi');
+        notifs.value = json?.data ?? [];
+        unread.value = Number(json?.unread ?? notifs.value.filter((n) => !Number(n.is_read)).length);
+    } catch { /* abaikan: badge hilang bila offline */ }
+}
+async function goAlert(a) {
+    try {
+        if (!Number(a.is_read)) {
+            await apiFetch(`/api/notifikasi/${a.id_notifikasi}/read`, { method: 'POST' });
+            a.is_read = 1;
+            unread.value = Math.max(0, unread.value - 1);
+        }
+    } catch { /* tetap navigasi walau gagal tandai */ }
+    closeAll();
+    router.visit(a.href || '/notifikasi');
+}
+async function readAll() {
+    try {
+        await apiFetch('/api/notifikasi/read-all', { method: 'POST' });
+        notifs.value = notifs.value.map((n) => ({ ...n, is_read: 1 }));
+        unread.value = 0;
+    } catch { /* abaikan */ }
+}
 function goNotif() { closeAll(); router.visit('/notifikasi'); }
 function closeAll() { notifOpen.value = false; }
 </script>

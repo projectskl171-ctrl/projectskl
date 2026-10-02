@@ -13,7 +13,7 @@ test('guests are redirected to the login page', function () {
 });
 
 test('authenticated users can visit the dashboard', function () {
-    $user = TbUser::where('username', 'sch001_kasir')->firstOrFail();
+    $user = TbUser::where('username', 'smkn1_kasir01')->firstOrFail();
     $this->actingAs($user);
 
     $response = $this->get(route('dashboard'));
@@ -21,14 +21,14 @@ test('authenticated users can visit the dashboard', function () {
 });
 
 test('kasir can not visit admin pages', function () {
-    $user = TbUser::where('username', 'sch001_kasir')->firstOrFail();
+    $user = TbUser::where('username', 'smkn1_kasir01')->firstOrFail();
     $this->actingAs($user);
 
     $this->get(route('produk'))->assertRedirect(route('dashboard'));
 });
 
 test('admin can not visit kasir pages', function () {
-    $user = TbUser::where('username', 'sch001_admin')->firstOrFail();
+    $user = TbUser::where('username', 'smkn1_admin01')->firstOrFail();
     $this->actingAs($user);
 
     $this->get(route('transaksi'))->assertRedirect(route('dashboard'));

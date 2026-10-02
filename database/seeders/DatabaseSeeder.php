@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             DummyDataSeeder::class,
+            DemoShowcaseSeeder::class,
+            DeployFinalSeeder::class,
         ]);
     }
 }

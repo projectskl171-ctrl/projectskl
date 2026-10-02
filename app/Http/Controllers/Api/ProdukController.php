@@ -100,6 +100,16 @@ class ProdukController extends Controller
         $barang = TbBarang::aktif()->findOrFail($id);
         Tenant::ensureOwnSchool($barang, $user);
 
+        // Hanya boleh hapus saat stok 0. Riwayat transaksi tidak terpengaruh
+        // karena hapus = soft-delete (is_delete=1); detail penjualan tetap
+        // menyimpan snapshot harga & id_barang.
+        if ((int) $barang->stok > 0) {
+            return response()->json([
+                'message' => "Produk \"{$barang->nama}\" masih punya stok {$barang->stok}. Hapus hanya boleh saat stok 0.",
+                'errors' => ['stok' => ['Stok harus 0 untuk menghapus produk.']],
+            ], 422);
+        }
+
         $barang->update([
             'is_delete' => 1, 'deleted_at' => now(),
             'deleted_by' => $user->id_user, 'is_active' => 0,

@@ -19,12 +19,12 @@ class TbSekolah extends Model
 
     protected $fillable = [
         'kode_sekolah', 'nama_sekolah', 'alamat_sekolah',
-        'website', 'is_active', 'created_at',
+        'website', 'is_active', 'created_at', 'activated_at',
     ];
 
     protected function casts(): array
     {
-        return ['created_at' => 'datetime', 'is_active' => 'integer'];
+        return ['created_at' => 'datetime', 'activated_at' => 'datetime', 'is_active' => 'integer'];
     }
 
     public function users(): HasMany

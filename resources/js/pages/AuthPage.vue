@@ -52,8 +52,7 @@
                         ease: 'easeInOut',
                     }"
                 >
-                    <span>KASIR</span>
-                    <span class="mt-[-8vw]">KU</span>
+                    <span>NIXA</span>
                 </motion.div>
             </div>
 
@@ -87,7 +86,7 @@
                                     />
                                 </span>
                                 {{
-                                    'KasirKu • POS Kasir'
+                                    'NIXA • X-platform Accounting'
                                 }}
                             </div>
 
@@ -171,6 +170,13 @@
                                 class="flex w-full max-w-md flex-col justify-center"
                             >
                                 <div class="mb-7">
+                                    <div class="mb-5 flex items-center gap-3">
+                                        <NixaLogo cls="h-11 w-11" />
+                                        <div>
+                                            <p class="text-xl leading-none font-black tracking-tight text-[var(--text-primary)]">NIXA</p>
+                                            <p class="mt-1 text-[10px] font-bold tracking-[0.18em] text-[var(--text-secondary)] uppercase">X-platform Accounting</p>
+                                        </div>
+                                    </div>
                                     <h2
                                         class="flex items-center gap-3 text-4xl font-black tracking-tight text-[var(--text-primary)]"
                                     >
@@ -290,17 +296,6 @@
                                         </span>
                                     </MagneticButton>
 
-                                    <div class="mt-1 rounded-2xl border border-green-400/20 bg-green-500/[0.06] px-4 py-3 text-center">
-                                        <p class="text-[11px] font-black tracking-[0.2em] text-emerald-700 uppercase dark:text-green-400/80">
-                                            Akun demo
-                                        </p>
-                                        <p class="mt-1 font-mono text-[11px] text-[var(--text-secondary)]">
-                                            sch001_kasir • sch001_admin • sch001_superadmin
-                                        </p>
-                                        <p class="mt-0.5 text-[10px] text-[var(--text-secondary)] opacity-70">
-                                            password: 123
-                                        </p>
-                                    </div>
                                 </form>
                             </motion.div>
                         </AnimatePresence>
@@ -326,6 +321,7 @@ import {
     h,
 } from 'vue';
 import { router as inertiaRouter } from '@inertiajs/vue3';
+import NixaLogo from '@/components/NixaLogo.vue';
 import { loginAsMockUser } from '@/composables/useAuthMock';
 import { useAppearance } from '@/composables/useAppearance';
 import { apiLogin, apiMe } from '@/lib/api';
@@ -349,15 +345,15 @@ const EASE_FAST = [0.16, 1, 0.3, 1];
 const QUOTES = [
     {
         text: 'Kasir cepat, antrean pendek, pelanggan senang.',
-        author: 'KasirKu POS',
+        author: 'Tim NIXA',
     },
     {
         text: 'Stok tercatat, omzet terpantau, usaha tenang.',
-        author: 'KasirKu POS',
+        author: 'Tim NIXA',
     },
     {
         text: 'Satu aplikasi untuk kasir, stok, dan laporan.',
-        author: 'KasirKu POS',
+        author: 'Tim NIXA',
     },
 ];
 
@@ -692,7 +688,7 @@ const ParticlesEngine = defineComponent({
 /* STATE (login saja — tanpa mode signup) */
 /* ================================================== */
 const quoteIdx = ref(0);
-/* Tema global KasirKu (diingat permanen di localStorage, default gelap). */
+/* Tema global NIXA (diingat permanen di localStorage, default gelap). */
 const { appearance, resolvedAppearance, updateAppearance } = useAppearance();
 const theme = computed(() => (resolvedAppearance.value === 'light' ? 'light' : 'dark'));
 void appearance;
@@ -740,6 +736,11 @@ const handleGlobalMouseMove = (e) => {
 /* ================================================== */
 let quoteTimer = null;
 onMounted(() => {
+    // Prefill username saat beralih akun dari modal (/?username=x).
+    try {
+        const pre = new URLSearchParams(window.location.search).get('username');
+        if (pre) formState.username = pre;
+    } catch { /* abaikan */ }
     quoteTimer = setInterval(() => {
         quoteIdx.value = (quoteIdx.value + 1) % QUOTES.length;
     }, 4000);
@@ -815,6 +816,7 @@ const handleLogin = async (e) => {
             username: u.username,
             nama_lengkap: u.nama_lengkap,
             role: u.role ?? 'kasir',
+            id_sekolah: u.id_sekolah ?? u.sekolah?.id_sekolah ?? null,
         });
         inertiaRouter.visit('/dashboard');
     } catch (err) {

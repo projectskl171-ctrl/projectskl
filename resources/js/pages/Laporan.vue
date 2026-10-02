@@ -1,19 +1,31 @@
 <template>
     <RoleDenied v-if="!auth.can('/laporan')" page="Laporan" :needed="['Admin', 'Super Admin']" />
     <div v-else class="space-y-4">
-        <div class="flex flex-col gap-2 rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-4 sm:flex-row sm:items-center">
-            <div class="flex gap-1.5">
-                <button v-for="r in ranges" :key="r.key" @click="range = r.key"
-                    :class="range === r.key ? 'bg-orange-500 text-white' : 'bg-slate-900/[0.04] dark:bg-white/5 text-slate-500 dark:text-white/50 hover:bg-slate-900/5 dark:hover:bg-white/10'"
-                    class="h-9 rounded-lg px-3 text-xs font-black">{{ r.label }}</button>
+        <div class="flex flex-col gap-2 rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-4 lg:flex-row lg:items-center">
+            <div class="flex flex-col gap-1.5">
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <button v-for="r in ranges" :key="r.key" @click="setRange(r.key)"
+                        :class="range === r.key ? 'bg-orange-500 text-white' : 'bg-slate-900/[0.04] dark:bg-white/5 text-slate-500 dark:text-white/50 hover:bg-slate-900/5 dark:hover:bg-white/10'"
+                        class="h-9 shrink-0 cursor-pointer rounded-lg px-3 text-xs font-black whitespace-nowrap">{{ r.label }}</button>
+                </div>
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <label class="flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-black/40 px-2.5 text-xs whitespace-nowrap text-slate-500 dark:text-white/50">Dari
+                        <input v-model="dari" @change="onCustom" type="date" class="w-[118px] bg-transparent text-xs text-slate-700 dark:text-white/80 outline-none" />
+                    </label>
+                    <label class="flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-black/40 px-2.5 text-xs whitespace-nowrap text-slate-500 dark:text-white/50">Sampai
+                        <input v-model="sampai" @change="onCustom" type="date" class="w-[118px] bg-transparent text-xs text-slate-700 dark:text-white/80 outline-none" />
+                    </label>
+                </div>
             </div>
-            <select v-model="fCara" class="h-9 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-black/40 px-3 text-xs outline-none">
-                <option value="">Semua cara bayar</option><option>Tunai</option><option>QRIS</option><option>Transfer</option><option>Tempo</option>
-            </select>
-            <select v-model="fJenis" class="h-9 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-black/40 px-3 text-xs outline-none">
-                <option value="">Tunai + Kredit</option><option value="tunai">Tunai saja</option><option value="kredit">Kredit saja</option>
-            </select>
-            <button @click="exportCsv" class="h-9 rounded-lg bg-slate-900/[0.04] dark:bg-white/5 px-4 text-xs font-black text-slate-600 dark:text-white/70 hover:bg-slate-900/5 dark:hover:bg-white/10 sm:ml-auto">⬇ Export CSV</button>
+            <div class="flex flex-wrap items-center gap-2 lg:ml-auto">
+                <select v-model="fCara" class="h-9 shrink-0 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-black/40 px-3 text-xs outline-none">
+                    <option value="">Semua cara bayar</option><option>Tunai</option><option>QRIS</option><option>Transfer</option><option>Tempo</option>
+                </select>
+                <select v-model="fJenis" class="h-9 shrink-0 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-black/40 px-3 text-xs outline-none">
+                    <option value="">Tunai + Kredit</option><option value="tunai">Tunai saja</option><option value="kredit">Kredit saja</option>
+                </select>
+                <button @click="exportCsv" class="h-9 shrink-0 cursor-pointer rounded-lg bg-slate-900/[0.04] dark:bg-white/5 px-4 text-xs font-black whitespace-nowrap text-slate-600 dark:text-white/70 hover:bg-slate-900/5 dark:hover:bg-white/10">⬇ Export CSV</button>
+            </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4 xl:grid-cols-5">
@@ -24,41 +36,22 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
-            <div class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 xl:col-span-2">
-                <h2 class="text-sm font-bold">Omzet vs Laba Harian</h2>
-                <p class="mt-0.5 text-[11px] text-slate-500 dark:text-white/40">laba = omzet − modal (harga beli × qty)</p>
-                <div class="mt-5 flex h-48 items-end gap-2">
-                    <div v-for="d in daily" :key="d.key" class="flex flex-1 flex-col items-center gap-1">
-                        <div class="flex w-full flex-1 items-end gap-1">
-                            <div class="flex-1 rounded-t bg-gradient-to-t from-orange-600/40 to-orange-400/90" :style="{ height: pct(d.omzet, maxOmzet) + '%' }" :title="'Omzet ' + formatRupiah(d.omzet)"></div>
-                            <div class="flex-1 rounded-t bg-gradient-to-t from-emerald-600/40 to-emerald-400/90" :style="{ height: pct(d.laba, maxOmzet) + '%' }" :title="'Laba ' + formatRupiah(d.laba)"></div>
-                        </div>
-                        <span class="text-[9px] font-bold text-slate-400 dark:text-white/30">{{ d.label }}</span>
-                    </div>
+        <div class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5">
+            <h2 class="text-sm font-bold">Cara Bayar</h2>
+            <div class="mt-4 space-y-3">
+                <div v-for="c in byCara" :key="c.cara">
+                    <div class="flex justify-between text-xs"><span class="font-bold">{{ c.cara }}</span><span class="text-slate-500 dark:text-white/50">{{ c.count }} trx • {{ formatRupiahShort(c.total) }}</span></div>
+                    <div class="mt-1 h-2 overflow-hidden rounded-full bg-slate-900/[0.04] dark:bg-white/5"><div class="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-400" :style="{ width: (c.total / Math.max(1, maxCara)) * 100 + '%' }"></div></div>
                 </div>
-                <div class="mt-3 flex gap-4 text-[11px] text-slate-500 dark:text-white/50">
-                    <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-orange-400"></span>Omzet</span>
-                    <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-400"></span>Laba kotor</span>
-                </div>
+                <p v-if="!byCara.length" class="text-xs text-slate-400 dark:text-white/30">Tidak ada data.</p>
             </div>
-            <div class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5">
-                <h2 class="text-sm font-bold">Cara Bayar</h2>
-                <div class="mt-4 space-y-3">
-                    <div v-for="c in byCara" :key="c.cara">
-                        <div class="flex justify-between text-xs"><span class="font-bold">{{ c.cara }}</span><span class="text-slate-500 dark:text-white/50">{{ c.count }} trx • {{ formatRupiahShort(c.total) }}</span></div>
-                        <div class="mt-1 h-2 overflow-hidden rounded-full bg-slate-900/[0.04] dark:bg-white/5"><div class="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-400" :style="{ width: (c.total / Math.max(1, maxCara)) * 100 + '%' }"></div></div>
-                    </div>
-                    <p v-if="!byCara.length" class="text-xs text-slate-400 dark:text-white/30">Tidak ada data.</p>
-                </div>
-                <h2 class="mt-6 text-sm font-bold">Top Produk</h2>
-                <div class="mt-2 space-y-2">
-                    <div v-for="(t, i) in topProduk.slice(0, 5)" :key="t.id" class="flex items-center gap-2.5 text-xs">
-                        <span class="w-5 text-center font-black text-slate-400 dark:text-white/25">{{ i + 1 }}</span>
-                        <span class="flex-1 truncate font-bold">{{ t.nama }}</span>
-                        <span class="text-slate-500 dark:text-white/40">{{ t.qty }} terjual</span>
-                        <span class="font-black text-emerald-700 dark:text-emerald-400">{{ formatRupiahShort(t.omzet) }}</span>
-                    </div>
+            <h2 class="mt-6 text-sm font-bold">Top Produk</h2>
+            <div class="mt-2 space-y-2">
+                <div v-for="(t, i) in topProduk.slice(0, 5)" :key="t.id" class="flex items-center gap-2.5 text-xs">
+                    <span class="w-5 text-center font-black text-slate-400 dark:text-white/25">{{ i + 1 }}</span>
+                    <span class="flex-1 truncate font-bold">{{ t.nama }}</span>
+                    <span class="text-slate-500 dark:text-white/40">{{ t.qty }} terjual</span>
+                    <span class="font-black text-emerald-700 dark:text-emerald-400">{{ formatRupiahShort(t.omzet) }}</span>
                 </div>
             </div>
         </div>
@@ -97,25 +90,43 @@ import { useAuthMock } from '@/composables/useAuthMock';
 import { dayKey, formatDateTime, formatRupiah, formatRupiahShort } from '@/lib/format';
 
 defineOptions({ layout: DashboardLayout });
-const props = defineProps({ penjualan: Array, detailPenjualan: Array });
+const props = defineProps({ penjualan: Array, detailPenjualan: Array, pembelian: Array, detailPembelian: Array, barang: Array, pelanggan: Array });
 onMounted(() => hydrate(props));
 const store = usePosStore();
 const auth = useAuthMock();
 
 const ranges = [{ key: 'today', label: 'Hari ini' }, { key: '7', label: '7 hari' }, { key: '30', label: '30 hari' }, { key: 'all', label: 'Semua' }];
 const range = ref('7'), fCara = ref(''), fJenis = ref('');
+const dari = ref(''), sampai = ref(''); // filter tanggal spesifik (mengalahkan preset)
 
-/* Scope sekolah dari akun login (admin terkunci sekolahnya, super admin semua).
-   Angka dicoerce Number karena backend mengirim decimal sebagai string. */
-const mySchoolId = computed(() => {
-    const me = store.usersAktif.value.find((u) => u.id_user === (auth.user.value?.id_user ?? -1));
-    if (me) return me.id_sekolah;
-    return auth.role.value === 'super admin' ? 0 : 1;
+/* Pilih preset -> tanggal spesifik dibersihkan. Isi salah satu tanggal -> mode custom. */
+function setRange(key) { range.value = key; dari.value = ''; sampai.value = ''; }
+function onCustom() {
+    if (dari.value || sampai.value) range.value = 'custom';
+    else if (range.value === 'custom') range.value = '7';
+}
+
+/* Scope sekolah dari SESSION login (admin terkunci sekolahnya, super admin semua).
+   Jangan pakai store.users (sering tidak memuat akun sendiri) agar admin di
+   luar sekolah 1 tidak melihat laporan kosong. Angka dicoerce Number karena
+   backend mengirim decimal sebagai string. */
+const scopeId = computed(() => {
+    if (auth.role.value === 'super admin') return 0;
+    if (auth.user.value?.id_sekolah != null) return Number(auth.user.value.id_sekolah);
+    const me = store.usersAktif.value.find((u) => Number(u.id_user) === Number(auth.user.value?.id_user ?? -1));
+    if (me?.id_sekolah != null) return Number(me.id_sekolah);
+    return 1;
 });
-const scopeId = computed(() => (auth.role.value === 'super admin' ? 0 : (mySchoolId.value || 1)));
 const num = (v) => Number(v) || 0;
 
 const inRange = (iso) => {
+    const k = dayKey(iso);
+    // Tanggal spesifik (dari/sampai) mengalahkan preset.
+    if (dari.value || sampai.value) {
+        if (dari.value && k < dari.value) return false;
+        if (sampai.value && k > sampai.value) return false;
+        return true;
+    }
     if (range.value === 'all') return true;
     const days = range.value === 'today' ? 0 : Number(range.value);
     const d = new Date(iso), now = new Date();
@@ -126,7 +137,7 @@ const baseFiltered = computed(() => store.penjualanAktif.value.filter((t) =>
     (!scopeId.value || (t.id_sekolah ?? 1) === scopeId.value) &&
     inRange(t.tanggal_penjualan) && (!fCara.value || t.cara_bayar === fCara.value) && (!fJenis.value || t.jenis_transaksi === fJenis.value)
 ).sort((a, b) => +new Date(b.tanggal_penjualan) - +new Date(a.tanggal_penjualan)));
-const { page, totalPages, paged, filtered } = usePagination(() => baseFiltered.value, 15, [range, fCara, fJenis]);
+const { page, totalPages, paged, filtered } = usePagination(() => baseFiltered.value, 15, [range, fCara, fJenis, dari, sampai]);
 
 const hpp = (id) => store.detailJual(id).reduce((s, d) => s + num(d.harga_beli) * num(d.jumlah_barang), 0);
 const sumOmzet = computed(() => filtered.value.reduce((s, t) => s + num(t.total_faktur), 0));
@@ -138,20 +149,6 @@ const summary = computed(() => [
     { label: 'Rata-rata / Trx', value: formatRupiah(filtered.value.length ? Math.round(sumOmzet.value / filtered.value.length) : 0), sub: 'average order', color: '#60a5fa' },
     { label: 'Piutang', value: formatRupiah(filtered.value.filter((t) => t.status_pembayaran === 'belum bayar').reduce((s, t) => s + num(t.total_faktur), 0)), sub: `${filtered.value.filter((t) => t.status_pembayaran === 'belum bayar').length} belum bayar`, color: '#fbbf24' },
 ]);
-const daily = computed(() => {
-    const n = range.value === 'all' ? 14 : range.value === 'today' ? 1 : Number(range.value);
-    const out = [];
-    for (let i = n - 1; i >= 0; i--) {
-        const d = new Date(); d.setDate(d.getDate() - i);
-        const key = dayKey(d);
-        const rows = filtered.value.filter((t) => dayKey(t.tanggal_penjualan) === key);
-        const omzet = rows.reduce((s, t) => s + num(t.total_faktur), 0);
-        out.push({ key, label: d.toLocaleDateString('id-ID', { weekday: 'short' }), omzet, laba: omzet - rows.reduce((s, t) => s + hpp(t.id_penjualan), 0) });
-    }
-    return out;
-});
-const maxOmzet = computed(() => Math.max(1, ...daily.value.map((d) => d.omzet)));
-const pct = (v, m) => Math.max(3, (v / m) * 100);
 const byCara = computed(() => {
     const m = {};
     for (const t of filtered.value) { m[t.cara_bayar] = m[t.cara_bayar] || { cara: t.cara_bayar, total: 0, count: 0 }; m[t.cara_bayar].total += num(t.total_faktur); m[t.cara_bayar].count++; }

@@ -67,6 +67,9 @@
             <Pagination :page="page" :total-pages="totalPages" @update:page="page = $event" />
         </div>
     </div>
+
+    <ConfirmModal :show="cf.show" :title="cf.title" :message="cf.message" :confirm-label="cf.confirmLabel" :danger="cf.danger" :loading="cf.loading" @cancel="cf.show = false" @confirm="cfRun" />
+    <ConfirmModal :show="infoCf.show" title="Gagal" :message="infoCf.message" confirm-label="Tutup" :hide-cancel="true" @cancel="infoCf.show = false" @confirm="infoCf.show = false" />
 </template>
 
 <script setup>
@@ -74,14 +77,19 @@ import { computed, onMounted, ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 import RoleDenied from '@/components/RoleDenied.vue';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 import Pagination from '@/components/Pagination.vue';
-import { hydrate, usePosStore } from '@/composables/usePosStore';
+import { hydrate, mergeBarangRealtime, replaceCollection, usePosStore } from '@/composables/usePosStore';
 import { useAuthMock } from '@/composables/useAuthMock';
 import { dayKey, formatDateTime, formatRupiah, todayKey } from '@/lib/format';
+import { apiFetch } from '@/lib/api';
 
 defineOptions({ layout: DashboardLayout });
-const props = defineProps({ penjualan: Array, detailPenjualan: Array, pelanggan: Array, barang: Array });
-onMounted(() => hydrate(props));
+const props = defineProps({ penjualan: Array, detailPenjualan: Array, pelanggan: Array, barang: Array, sekolah: Array });
+onMounted(() => {
+    hydrate(props);
+    loadRiwayat();
+});
 const store = usePosStore();
 const auth = useAuthMock();
 
@@ -117,7 +125,7 @@ const filtered = computed(() => {
         );
     });
 });
-const omzetFiltered = computed(() => filtered.value.reduce((s, t) => s + t.total_faktur, 0));
+const omzetFiltered = computed(() => filtered.value.reduce((s, t) => s + Number(t.total_faktur || 0), 0));
 const totalPages = computed(() => Math.max(1, Math.ceil(filtered.value.length / PER_PAGE)));
 const paged = computed(() => {
     if (page.value > totalPages.value) page.value = totalPages.value;
@@ -129,7 +137,7 @@ const summary = computed(() => [
     { label: 'Transaksi tampil', value: String(filtered.value.length), sub: `tab: ${tab.value}` },
     { label: 'Omzet tampil', value: formatRupiah(omzetFiltered.value), sub: 'Σ total_faktur filter aktif' },
     { label: 'Belum bayar', value: String(filtered.value.filter((t) => t.status_pembayaran === 'belum bayar').length), sub: 'piutang pada filter aktif' },
-    { label: 'Hari ini (semua)', value: String(countHari.value), sub: `${formatRupiah(store.penjualanAktif.value.filter((p) => dayKey(p.tanggal_penjualan) === todayKey()).reduce((s, t) => s + t.total_faktur, 0))}` },
+    { label: 'Hari ini (semua)', value: String(countHari.value), sub: `${formatRupiah(store.penjualanAktif.value.filter((p) => dayKey(p.tanggal_penjualan) === todayKey()).reduce((s, t) => s + Number(t.total_faktur || 0), 0))}` },
 ]);
 
 function canVoid(t) {
@@ -137,10 +145,51 @@ function canVoid(t) {
     const myId = auth.user.value?.id_user ?? -1;
     return t.id_user === myId && dayKey(t.tanggal_penjualan) === todayKey();
 }
+function extractRows(json) {
+    if (Array.isArray(json)) return json;
+    if (Array.isArray(json?.data)) return json.data;
+    if (Array.isArray(json?.data?.data)) return json.data.data;
+    return [];
+}
+async function loadRiwayat() {
+    try {
+        const json = await apiFetch('/api/penjualan?per_page=100');
+        const rows = extractRows(json);
+        if (rows.length || json?.data) replaceCollection('penjualan', rows);
+        const bj = await apiFetch('/api/produk?per_page=500').catch(() => null);
+        if (bj) {
+            const br = extractRows(bj);
+            if (br.length || bj?.data) mergeBarangRealtime(br);
+        }
+    } catch { /* pakai hydrate */ }
+}
+const cf = ref({ show: false, title: '', message: '', confirmLabel: 'Ya', danger: false, loading: false, run: null });
+const infoCf = ref({ show: false, message: '' });
+async function cfRun() {
+    const fn = cf.value.run;
+    if (!fn) { cf.value.show = false; return; }
+    cf.value.loading = true;
+    try {
+        await fn();
+        cf.value.show = false;
+    } catch (e) {
+        cf.value.show = false;
+        infoCf.value = { show: true, message: e?.message || 'Gagal membatalkan transaksi.' };
+    } finally {
+        cf.value.loading = false;
+    }
+}
 function batalkan(t) {
-    if (!confirm(`Batalkan #TRX-${String(t.id_penjualan).padStart(4, '0')}? Stok akan dikembalikan.`)) return;
-    store.voidPenjualan(t.id_penjualan);
-    if (openId.value === t.id_penjualan) openId.value = 0;
+    cf.value = {
+        show: true, title: 'Batalkan transaksi?',
+        message: `Batalkan #TRX-${String(t.id_penjualan).padStart(4, '0')} (${formatRupiah(t.total_faktur)})? Stok akan dikembalikan.`,
+        confirmLabel: 'Batalkan', danger: true, loading: false,
+        run: async () => {
+            await apiFetch(`/api/penjualan/${t.id_penjualan}`, { method: 'DELETE' });
+            await loadRiwayat();
+            if (openId.value === t.id_penjualan) openId.value = 0;
+        },
+    };
 }
 function cetakUlang(t) {
     const lines = store.detailJual(t.id_penjualan).map((d) =>

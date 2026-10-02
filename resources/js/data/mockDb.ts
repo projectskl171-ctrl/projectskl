@@ -55,13 +55,13 @@ export const seedRoles: Role[] = [
 
 /* ---------------- 3. tb_user ---------------- */
 export const seedUsers: UserRow[] = [
-    { id_user: 1, id_sekolah: 1, id_role: 1, username: 'superadmin', password: '— hashed —', nama_lengkap: 'Admin Utama', is_active: 1, created_at: daysAgo(400), created_by: null },
-    { id_user: 2, id_sekolah: 1, id_role: 2, username: 'admin.kantin', password: '— hashed —', nama_lengkap: 'Sari Puspita', is_active: 1, created_at: daysAgo(300), created_by: 1 },
-    { id_user: 3, id_sekolah: 1, id_role: 3, username: 'kasir.01', password: '— hashed —', nama_lengkap: 'Dedi Kurniawan', is_active: 1, created_at: daysAgo(200), created_by: 1 },
+    { id_user: 1, id_sekolah: 1, id_role: 1, username: 'superadmin', password: '— hashed —', nama_lengkap: 'Administrator', is_active: 1, created_at: daysAgo(400), created_by: null },
+    { id_user: 2, id_sekolah: 1, id_role: 2, username: 'smkn1_admin01', password: '— hashed —', nama_lengkap: 'Sari Puspita', is_active: 1, created_at: daysAgo(300), created_by: 1 },
+    { id_user: 3, id_sekolah: 1, id_role: 3, username: 'smkn1_kasir01', password: '— hashed —', nama_lengkap: 'Dedi Kurniawan', is_active: 1, created_at: daysAgo(200), created_by: 1 },
     { id_user: 4, id_sekolah: 1, id_role: 3, username: 'kasir.02', password: '— hashed —', nama_lengkap: 'Rina Marlina', is_active: 1, created_at: daysAgo(120), created_by: 1 },
     { id_user: 5, id_sekolah: 1, id_role: 3, username: 'kasir.03', password: '— hashed —', nama_lengkap: 'Budi Santoso', is_active: 0, created_at: daysAgo(60), created_by: 1 },
-    { id_user: 6, id_sekolah: 2, id_role: 2, username: 'admin.pelita', password: '— hashed —', nama_lengkap: 'Agus Wijaya', is_active: 1, created_at: daysAgo(200), created_by: 1 },
-    { id_user: 7, id_sekolah: 2, id_role: 3, username: 'kasir.pelita', password: '— hashed —', nama_lengkap: 'Dewi Lestari', is_active: 1, created_at: daysAgo(150), created_by: 1 },
+    { id_user: 6, id_sekolah: 2, id_role: 2, username: 'smkn2_admin01', password: '— hashed —', nama_lengkap: 'Agus Wijaya', is_active: 1, created_at: daysAgo(200), created_by: 1 },
+    { id_user: 7, id_sekolah: 2, id_role: 3, username: 'smkn2_kasir01', password: '— hashed —', nama_lengkap: 'Dewi Lestari', is_active: 1, created_at: daysAgo(150), created_by: 1 },
 ];
 
 /* ---------------- 4. tb_kelompok_kategori ---------------- */

@@ -26,6 +26,7 @@ class AuthController extends Controller
         /** @var TbUser|null $user */
         $user = TbUser::with(['role', 'sekolah'])
             ->where('username', $data['username'])
+            ->whereNull('deleted_at')
             ->first();
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {

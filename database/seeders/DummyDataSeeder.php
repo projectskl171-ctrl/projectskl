@@ -7,18 +7,18 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 /**
- * Seeder data dummy POS (3 sekolah x 100 produk + master).
+ * Seeder data dummy POS (4 sekolah x 100 produk + master).
  *
  * SUMBER UTAMA: file `database/seeders/sql/dummy.sql` (SQL asli dari guru).
  * Jika file tersebut ada, seeder menjalankannya apa adanya — hanya baris
  * `USE db_pos` yang diabaikan agar memakai database Laravel aktif (db_sekolah).
  *
  * FALLBACK: bila file SQL belum ditaruh, seeder merekonstruksi dataset yang
- * SAMA dari pola SQL yang diberikan (porting format SQL -> PHP, bukan data
- * karangan): 3 sekolah SCH001-003, 3 roles, 9 users (password "123",
- * di-hash bcrypt via Hash::make), 12 kelompok kategori, 36 kategori,
- * 15 supplier, 9 kelompok pelanggan, 45 pelanggan, 300 barang (100/tenant
- * dengan nama, barcode, harga, dan stok sesuai pola dummy SQL).
+ *   SAMA dari pola SQL yang diberikan (porting format SQL -> PHP, bukan data
+ *   karangan): 4 sekolah SCH001-004, 3 roles, 12 users (password "123",
+ *   di-hash bcrypt via Hash::make), 16 kelompok kategori, 48 kategori,
+ *   20 supplier, 12 kelompok pelanggan, 60 pelanggan, 400 barang (100/tenant
+ *   dengan nama, barcode, harga, dan stok sesuai pola dummy SQL).
  */
 class DummyDataSeeder extends Seeder
 {
@@ -126,19 +126,32 @@ class DummyDataSeeder extends Seeder
             'kasir' => (int) DB::table('roles')->where('nama_role', 'kasir')->value('id_role'),
         ];
 
+        // --- superadmin global (tanpa sekolah, 1 saja) ---
+        if (! DB::table('tb_user')->where('username', 'superadmin')->exists()) {
+            DB::table('tb_user')->insert([
+                'id_sekolah' => null, 'id_role' => $roleIds['super admin'],
+                'username' => 'superadmin', 'password' => $pw,
+                'nama_lengkap' => 'Administrator', 'is_active' => 1, 'created_at' => $now,
+            ]);
+        }
+
         foreach ($sekolahIds as $t => $idSekolah) {
             $n = $t + 1;
 
-            // --- users: 1 super admin, 1 admin, 1 kasir per sekolah ---
+            // --- users per sekolah: 1 admin + 1 kasir (skip bila peran sudah ada) ---
+            $seed = $this->sekolahRows()[$t]['nama_sekolah'];
             $users = [
-                ["sch00{$n}_superadmin", $roleIds['super admin'], "Super Admin {$this->sekolahRows()[$t]['nama_sekolah']}"],
-                ["sch00{$n}_admin", $roleIds['admin'], "Admin {$this->sekolahRows()[$t]['nama_sekolah']}"],
-                ["sch00{$n}_kasir", $roleIds['kasir'], "Kasir {$this->sekolahRows()[$t]['nama_sekolah']}"],
+                ["smkn{$n}_admin01", $roleIds['admin'], "Admin {$seed}", 'admin'],
+                ["smkn{$n}_kasir01", $roleIds['kasir'], "Kasir {$seed}", 'kasir'],
             ];
-            foreach ($users as [$username, $idRole, $nama]) {
-                $exists = DB::table('tb_user')
-                    ->where('id_sekolah', $idSekolah)->where('username', $username)->exists();
-                if (! $exists) {
+            foreach ($users as [$username, $idRole, $nama, $peran]) {
+                $ada = DB::table('tb_user')->where('id_sekolah', $idSekolah)->whereNull('deleted_at');
+                if ($peran === 'admin') {
+                    $ada->where('id_role', $roleIds['admin']);
+                } else {
+                    $ada->where('id_role', $roleIds['kasir']);
+                }
+                if (! $ada->exists() && ! DB::table('tb_user')->where('username', $username)->exists()) {
                     DB::table('tb_user')->insert([
                         'id_sekolah' => $idSekolah, 'id_role' => $idRole,
                         'username' => $username, 'password' => $pw,
@@ -184,13 +197,13 @@ class DummyDataSeeder extends Seeder
             // Flatten: [Snack, Roti, MInstan, AirMin, MinBotol, MinSerbuk, AlatTulis, Kertas, Perlengkapan, Kebersihan, Aksesori, Lain]
             $kat = array_merge(...$kategoriIds);
 
-            // --- supplier (5) ---
+            // --- supplier (5, nama tanpa sufiks tenant agar re-run tidak duplikat) ---
             $supplierSeed = [
-                ['CV Sumber Makmur - T'.$n, 'Jl. Industri No. 1'],
-                ['PT Maju Jaya Distribusi - T'.$n, 'Jl. Niaga No. 2'],
-                ['UD Berkah Abadi - T'.$n, 'Jl. Pasar No. 3'],
-                ['CV Sentosa Grosir - T'.$n, 'Jl. Raya No. 4'],
-                ['PT Nusantara Supply - T'.$n, 'Jl. Logistik No. 5'],
+                ['CV Sumber Makmur', 'Jl. Industri No. 1'],
+                ['PT Maju Jaya Distribusi', 'Jl. Niaga No. 2'],
+                ['UD Berkah Abadi', 'Jl. Pasar No. 3'],
+                ['CV Sentosa Grosir', 'Jl. Raya No. 4'],
+                ['PT Nusantara Supply', 'Jl. Logistik No. 5'],
             ];
             $supplierIds = [];
             foreach ($supplierSeed as $k => $s) {
@@ -220,7 +233,11 @@ class DummyDataSeeder extends Seeder
                 }
                 $kpIds[] = (int) $idKp;
             }
-            for ($k = 1; $k <= 15; $k++) {
+            // Lewati bila sekolah sudah punya pelanggan (hindari duplikat saat re-run).
+            $sudahPlg = DB::table('tb_pelanggan as p')
+                ->join('tb_kelompok_pelanggan as k', 'k.id_kelompok_pelanggan', '=', 'p.id_kelompok_pelanggan')
+                ->where('k.id_sekolah', $idSekolah)->where('p.is_delete', 0)->count();
+            for ($k = 1; $k <= 15 && $sudahPlg < 15; $k++) {
                 $namaPlg = sprintf('Pelanggan T%d %02d', $n, $k);
                 $exists = DB::table('tb_pelanggan')
                     ->where('id_kelompok_pelanggan', $kpIds[($k - 1) % 3])
@@ -236,7 +253,10 @@ class DummyDataSeeder extends Seeder
                 }
             }
 
-            // --- barang (100) ---
+            // --- barang (100): hanya bila sekolah belum punya (jangan timpa
+            // harga/stok operasional + showcase saat re-run) ---
+            $sudahBarang = DB::table('tb_barang')->where('id_sekolah', $idSekolah)->count();
+            if ($sudahBarang === 0) {
             foreach ($this->produkRows() as $i => $p) {
                 $item = $i + 1; // 1..100
                 $pos = ($item - 1) % 20; // posisi dalam blok 20
@@ -267,15 +287,17 @@ class DummyDataSeeder extends Seeder
                     ]
                 );
             }
+            } // end if ($sudahBarang === 0)
         }
     }
 
     protected function sekolahRows(): array
     {
         return [
-            ['kode_sekolah' => 'SCH001', 'nama_sekolah' => 'SMK Negeri 1 Teknologi', 'alamat_sekolah' => 'Jl. Merdeka No. 1', 'website' => 'https://smkn1teknologi.sch.id', 'is_active' => 1],
-            ['kode_sekolah' => 'SCH002', 'nama_sekolah' => 'SMK Negeri 2 Informatika', 'alamat_sekolah' => 'Jl. Pendidikan No. 25', 'website' => 'https://smkn2informatika.sch.id', 'is_active' => 1],
-            ['kode_sekolah' => 'SCH003', 'nama_sekolah' => 'SMA Negeri 3 Mandiri', 'alamat_sekolah' => 'Jl. Pelajar No. 10', 'website' => 'https://sman3mandiri.sch.id', 'is_active' => 1],
+            ['kode_sekolah' => 'SCH001', 'nama_sekolah' => 'SMKN 1 Tasikmalaya', 'alamat_sekolah' => 'Jl. Merdeka No. 1, Tasikmalaya', 'website' => 'https://smkn1tasikmalaya.sch.id', 'is_active' => 1],
+            ['kode_sekolah' => 'SCH002', 'nama_sekolah' => 'SMKN 2 Tasikmalaya', 'alamat_sekolah' => 'Jl. Pendidikan No. 25, Tasikmalaya', 'website' => 'https://smkn2tasikmalaya.sch.id', 'is_active' => 1],
+            ['kode_sekolah' => 'SCH003', 'nama_sekolah' => 'SMKN 3 Tasikmalaya', 'alamat_sekolah' => 'Jl. Pelajar No. 10, Tasikmalaya', 'website' => 'https://smkn3tasikmalaya.sch.id', 'is_active' => 1],
+            ['kode_sekolah' => 'SCH004', 'nama_sekolah' => 'SMKN 4 Tasikmalaya', 'alamat_sekolah' => 'Jl. Raya Timur No. 77, Tasikmalaya', 'website' => 'https://smkn4tasikmalaya.sch.id', 'is_active' => 1],
         ];
     }
 

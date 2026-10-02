@@ -18,7 +18,7 @@ test('tb_user accounts have no two factor challenge step', function () {
     // tb_user (schema guru) tidak memiliki kolom 2FA; login username
     // langsung terautentikasi tanpa challenge.
     $this->post(route('login.store'), [
-        'username' => 'sch001_kasir',
+        'username' => 'smkn1_kasir01',
         'password' => '123',
     ]);
 

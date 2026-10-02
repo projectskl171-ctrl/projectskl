@@ -8,6 +8,7 @@
    ===================================================================== */
 import { computed, reactive } from 'vue';
 import { apiFetch } from '@/lib/api';
+import { recordLogin } from '@/composables/useAccounts';
 
 export type MockRole = 'kasir' | 'admin' | 'super admin';
 
@@ -17,13 +18,15 @@ export interface MockUser {
     nama_lengkap: string;
     role: MockRole;
     inisial: string;
+    /** id_sekolah dari session server (/api/auth/me). Dipakai scope laporan & data. */
+    id_sekolah?: number | null;
 }
 
-/* Akun demo — mirror tb_user + roles */
+/* Akun fallback offline — mirror tb_user + roles (superadmin global tanpa sekolah) */
 const ACCOUNTS: Record<MockRole, MockUser> = {
-    kasir: { id_user: 3, username: 'kasir.01', nama_lengkap: 'Dedi Kurniawan', role: 'kasir', inisial: 'DK' },
-    admin: { id_user: 2, username: 'admin.kantin', nama_lengkap: 'Sari Puspita', role: 'admin', inisial: 'SP' },
-    'super admin': { id_user: 1, username: 'superadmin', nama_lengkap: 'Admin Utama', role: 'super admin', inisial: 'AU' },
+    kasir: { id_user: 3, username: 'smkn1_kasir01', nama_lengkap: 'Dedi Kurniawan', role: 'kasir', inisial: 'DK', id_sekolah: 1 },
+    admin: { id_user: 2, username: 'smkn1_admin01', nama_lengkap: 'Sari Puspita', role: 'admin', inisial: 'SP', id_sekolah: 1 },
+    'super admin': { id_user: 1, username: 'superadmin', nama_lengkap: 'Administrator', role: 'super admin', inisial: 'AD', id_sekolah: null },
 };
 
 export const ROLE_LABEL: Record<MockRole, string> = {
@@ -33,9 +36,9 @@ export const ROLE_LABEL: Record<MockRole, string> = {
 };
 
 export const ROLE_SCOPE: Record<MockRole, string> = {
-    kasir: '1 sekolah · fokus transaksi dan pelanggan',
-    admin: '1 sekolah · kelola operasional harian dan kasir',
-    'super admin': 'semua sekolah · kontrol jaringan, sekolah, dan akses',
+    kasir: 'mari lakukan transaksi untuk hari ini!',
+    admin: 'kelola operasional harian dan kasir sekolahmu!',
+    'super admin': 'kontrol jaringan, sekolah, dan akses',
 };
 
 export const ROLE_COLOR: Record<MockRole, string> = {
@@ -95,12 +98,20 @@ export function logoutMock() {
 
 /** Login sebagai user tb_user spesifik (dipakai halaman login username).
     Backend nanti: POST /login lalu refresh usePage().props.auth.user. */
-export function loginAsMockUser(u: { id_user: number; username: string; nama_lengkap: string; role: MockRole }): MockUser {
+export function loginAsMockUser(u: { id_user: number; username: string; nama_lengkap: string; role: MockRole; id_sekolah?: number | null }): MockUser {
     boot();
     const inisial = u.nama_lengkap.split(' ').map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || '?';
-    state.user = { id_user: u.id_user, username: u.username, nama_lengkap: u.nama_lengkap, role: u.role, inisial };
+    // Pertahankan id_sekolah lama hanya bila login baru TIDAK membawanya sama
+    // sekali (undefined). Null eksplisit (superadmin global) wajib menang.
+    const prevSchool = state.user && Number(state.user.id_user) === Number(u.id_user) ? state.user.id_sekolah : undefined;
+    const id_sekolah = u.id_sekolah !== undefined ? u.id_sekolah : (prevSchool ?? null);
+    state.user = { id_user: u.id_user, username: u.username, nama_lengkap: u.nama_lengkap, role: u.role, inisial, id_sekolah };
     try {
         localStorage.setItem(LS_KEY, JSON.stringify(state.user));
+    } catch { /* abaikan */ }
+    // Catat ke daftar akun perangkat (logout/switch ala ChatGPT, tanpa password).
+    try {
+        recordLogin({ id_user: u.id_user, username: u.username, nama_lengkap: u.nama_lengkap, role: u.role });
     } catch { /* abaikan */ }
     return state.user;
 }
@@ -123,6 +134,7 @@ export async function syncAuthFromServer(): Promise<'ok' | 'unauthorized' | 'off
             username: u.username,
             nama_lengkap: u.nama_lengkap,
             role: u.role as MockRole,
+            id_sekolah: u.id_sekolah ?? u.sekolah?.id_sekolah ?? null,
         });
         return 'ok';
     } catch (err: any) {

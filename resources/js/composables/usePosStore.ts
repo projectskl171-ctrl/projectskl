@@ -84,22 +84,71 @@ export function resetMockDb() {
     persist();
 }
 
-/** Dipanggil saat backend sudah mengirim props Inertia asli. */
+/** Dipanggil saat backend sudah mengirim props Inertia asli.
+ *  Array kosong tetap menimpa mock agar data DB asli (0 baris) tidak
+ *  tertutup data dummy localStorage. Props yang tidak dikirim (undefined)
+ *  dilewati agar halaman lain tidak saling menghapus. */
 export function hydrate(props: Partial<Record<string, any>>) {
     const map: Record<string, keyof State> = {
-        barang: 'barang', kategori: 'kategori', supplier: 'supplier',
-        pelanggan: 'pelanggan', pembelian: 'pembelian', penjualan: 'penjualan',
+        barang: 'barang', kategori: 'kategori', kelompok: 'kelompok',
+        supplier: 'supplier',
+        pelanggan: 'pelanggan', kelompokPelanggan: 'kelompokPelanggan',
+        pembelian: 'pembelian', penjualan: 'penjualan',
         users: 'users', detailPenjualan: 'detailPenjualan', detailPembelian: 'detailPembelian',
         sekolah: 'sekolah',
     };
     let touched = false;
     for (const [pk, sk] of Object.entries(map)) {
-        if (Array.isArray(props[pk]) && props[pk].length) {
+        if (props[pk] === undefined) continue;
+        if (Array.isArray(props[pk])) {
             (state as any)[sk] = normalizeRows(sk, props[pk]);
             touched = true;
         }
     }
     if (touched) persist();
+}
+
+/** Timpa satu koleksi dari hasil API (dipakai polling realtime).
+ *  Menerima array baris mentah dari backend (string decimal ok). */
+export function replaceCollection(key: keyof State, rows: any[]) {
+    (state as any)[key] = normalizeRows(key, Array.isArray(rows) ? rows : []);
+    persist();
+}
+
+/** Merge khusus barang untuk realtime kasir:
+ *  - baris API (aktif) di-upsert,
+ *  - barang lama yang hilang dari API ditandai is_delete=1 (dihapus admin)
+ *    tapi TETAP disimpan agar nama di riwayat transaksi tidak hilang.
+ *  Katalog memakai barangAktif (filter is_delete) sehingga produk terhapus
+ *  otomatis hilang realtime, riwayat tetap tampil namanya. */
+export function mergeBarangRealtime(rows: any[]) {
+    const fresh = normalizeRows('barang', Array.isArray(rows) ? rows : []);
+    const freshIds = new Set(fresh.map((r: any) => Number(r.id_barang)));
+    const map = new Map(fresh.map((r: any) => [Number(r.id_barang), r]));
+    for (const old of state.barang) {
+        const id = Number((old as any).id_barang);
+        if (!freshIds.has(id)) {
+            // Hilang dari API = dihapus / nonaktif sekolah lain: tandai hapus
+            // tapi pertahankan untuk lookup nama riwayat.
+            (old as any).is_delete = 1;
+            (old as any).is_active = 0;
+        }
+    }
+    for (const r of fresh) {
+        const id = Number((r as any).id_barang);
+        const i = state.barang.findIndex((b) => Number(b.id_barang) === id);
+        if (i >= 0) state.barang[i] = r as any;
+        else state.barang.unshift(r as any);
+    }
+    // Hapus duplikat id (jaga-jaga)
+    const seen = new Set<number>();
+    state.barang = state.barang.filter((b) => {
+        const id = Number(b.id_barang);
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+    });
+    persist();
 }
 
 /* Backend mengirim kolom decimal (total_faktur, subtotal, …) sebagai STRING.
@@ -157,7 +206,7 @@ export function usePosStore() {
     const namaKelompokPelanggan = (id: number) =>
         state.kelompokPelanggan.find((k) => k.id_kelompok_pelanggan === id)?.nama_kelompok ?? '—';
     const namaSekolah = (id?: number) => {
-        if (id == null) return state.sekolah[0]?.nama_sekolah ?? 'KasirKu';
+        if (id == null) return state.sekolah[0]?.nama_sekolah ?? 'NIXA';
         return state.sekolah.find((s) => s.id_sekolah === id)?.nama_sekolah ?? '—';
     };
     const statusSekolah = (id?: number) => {

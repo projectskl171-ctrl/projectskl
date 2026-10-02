@@ -20,7 +20,8 @@ class UserController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        $q = TbUser::query()->with(['role:id_role,nama_role', 'sekolah:id_sekolah,nama_sekolah,kode_sekolah']);
+        $q = TbUser::query()->with(['role:id_role,nama_role', 'sekolah:id_sekolah,nama_sekolah,kode_sekolah'])
+            ->whereNull('deleted_at');
         Tenant::scopeSchool($q, $user);
 
         // Admin sekolah hanya melihat kasir (sesuai batas UI).

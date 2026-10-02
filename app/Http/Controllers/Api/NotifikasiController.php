@@ -3,91 +3,94 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\TbBarang;
-use App\Models\TbPembelian;
-use App\Models\TbPenjualan;
-use App\Models\TbSekolah;
-use App\Models\TbUser;
+use App\Models\TbNotifikasi;
+use App\Support\NotifikasiService;
 use App\Support\Tenant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Notifikasi READ-ONLY, dihitung dari kondisi database nyata.
- * Tidak ada tabel notifikasi di schema, jadi tidak ada CRUD.
+ * Notifikasi persisten (tb_notifikasi).
+ * - GET /api/notifikasi: generate terbaru + list sesuai role/sekolah.
+ * - POST /api/notifikasi/{id}/read: tandai 1 dibaca.
+ * - POST /api/notifikasi/read-all: tandai semua dibaca (scope user).
  */
 class NotifikasiController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        $role = $user->roleName();
 
-        // Super admin tidak butuh stok/piutang/draft: cukup info
-        // sekolah & admin yang bertambah hari ini.
-        if (Tenant::isSuperAdmin($user)) {
-            return response()->json([
-                'data' => $this->superAdminHariIni(),
-                'total' => count($this->superAdminHariIni()),
-            ]);
-        }
+        NotifikasiService::ensureForUser($user);
 
-        $items = [];
+        $items = NotifikasiService::listForUser($user, 100);
+        $unread = NotifikasiService::unreadCount($user);
 
-        $schoolFilter = fn ($q) => Tenant::isSuperAdmin($user) ? $q : $q->where('id_sekolah', $user->id_sekolah);
-
-        // Stok menipis & habis (admin + kasir + super admin).
-        $menipis = $schoolFilter(TbBarang::aktif()->where('stok', '<=', 10)->where('stok', '>', 0))->count();
-        if ($menipis > 0) {
-            $items[] = ['tipe' => 'stok_menipis', 'judul' => 'Stok menipis', 'pesan' => "{$menipis} produk memiliki stok 10 atau kurang.", 'jumlah' => $menipis];
-        }
-        $habis = $schoolFilter(TbBarang::aktif()->where('stok', '<=', 0))->count();
-        if ($habis > 0) {
-            $items[] = ['tipe' => 'stok_habis', 'judul' => 'Stok habis', 'pesan' => "{$habis} produk kehabisan stok.", 'jumlah' => $habis];
-        }
-
-        // Pembelian draft (admin).
-        if (in_array($role, ['super admin', 'admin'], true)) {
-            $draft = $schoolFilter(TbPembelian::aktif()->where('status_pembelian', 'draft'))->count();
-            if ($draft > 0) {
-                $items[] = ['tipe' => 'pembelian_draft', 'judul' => 'Draft pembelian', 'pesan' => "{$draft} pembelian masih berstatus draft.", 'jumlah' => $draft];
-            }
-        }
-
-        // Transaksi kredit belum lunas (semua role).
-        $piutang = $schoolFilter(TbPenjualan::aktif()->where('status_pembayaran', 'belum bayar'))->count();
-        if ($piutang > 0) {
-            $items[] = ['tipe' => 'piutang', 'judul' => 'Kredit belum lunas', 'pesan' => "{$piutang} transaksi kredit belum dibayar.", 'jumlah' => $piutang];
-        }
-
-        return response()->json(['data' => $items, 'total' => count($items)]);
+        return response()->json([
+            'data' => $items,
+            'total' => $items->count(),
+            'unread' => $unread,
+        ]);
     }
 
-    /** Super admin: sekolah & admin yang bertambah hari ini saja. */
-    protected function superAdminHariIni(): array
+    public function read(Request $request, int $id): JsonResponse
     {
-        $items = [];
-        $today = today()->toDateString();
+        $user = $request->user();
 
-        $sekolahBaru = TbSekolah::whereDate('created_at', $today)->orderBy('id_sekolah')->get();
-        foreach ($sekolahBaru as $s) {
-            $items[] = [
-                'tipe' => 'sekolah_baru', 'judul' => "Sekolah baru: {$s->nama_sekolah}",
-                'pesan' => "{$s->kode_sekolah} • terdaftar hari ini.", 'jumlah' => 1,
-            ];
+        $notif = TbNotifikasi::findOrFail($id);
+        $this->assertVisible($notif, $user);
+
+        $notif->update(['is_read' => 1, 'read_at' => now()]);
+
+        return response()->json([
+            'message' => 'Notifikasi ditandai dibaca.',
+            'unread' => NotifikasiService::unreadCount($user),
+        ]);
+    }
+
+    public function readAll(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        NotifikasiService::ensureForUser($user);
+        $items = NotifikasiService::listForUser($user, 500);
+        $ids = $items->where('is_read', 0)->pluck('id_notifikasi');
+
+        if ($ids->isNotEmpty()) {
+            TbNotifikasi::whereIn('id_notifikasi', $ids)->update(['is_read' => 1, 'read_at' => now()]);
         }
 
-        $adminBaru = TbUser::whereDate('created_at', $today)
-            ->whereHas('role', fn ($q) => $q->where('nama_role', 'admin'))
-            ->with('sekolah:id_sekolah,nama_sekolah')
-            ->orderBy('id_user')->get();
-        foreach ($adminBaru as $u) {
-            $items[] = [
-                'tipe' => 'admin_baru', 'judul' => "Admin baru: {$u->nama_lengkap}",
-                'pesan' => "@{$u->username} • ".($u->sekolah?->nama_sekolah ?? 'tanpa sekolah').' • hari ini.', 'jumlah' => 1,
-            ];
+        return response()->json([
+            'message' => 'Semua notifikasi ditandai dibaca.',
+            'unread' => 0,
+        ]);
+    }
+
+    protected function assertVisible(TbNotifikasi $notif, $user): void
+    {
+        if (Tenant::isSuperAdmin($user)) {
+            if ($notif->role_target !== 'super admin') {
+                abort(404, 'Data tidak ditemukan.');
+            }
+
+            return;
         }
 
-        return $items;
+        if ((int) ($notif->id_sekolah ?? 0) !== (int) $user->id_sekolah) {
+            abort(404, 'Data tidak ditemukan.');
+        }
+
+        $role = $user->roleName();
+        if ($role === 'kasir') {
+            $ok = $notif->role_target === 'kasir' || (int) ($notif->id_user ?? 0) === (int) $user->id_user;
+            if (! $ok) {
+                abort(404, 'Data tidak ditemukan.');
+            }
+        } elseif ($role === 'admin') {
+            // Admin HANYA stok + congrats sekolah.
+            if ($notif->role_target !== 'admin') {
+                abort(404, 'Data tidak ditemukan.');
+            }
+        }
     }
 }

@@ -35,7 +35,11 @@ class PageController extends Controller
 
     protected function barang(Request $request, int $limit = 500)
     {
-        $q = TbBarang::aktif()
+        // Sengaja TANPA scope aktif: baris terhapus (is_delete=1) tetap dikirim
+        // agar lookup nama di riwayat transaksi tidak hilang ("#id").
+        // Katalog kasir & admin memakai barangAktif (filter is_delete) sehingga
+        // produk terhapus otomatis hilang realtime dari kasir.
+        $q = TbBarang::query()
             ->with(['kategori:id_kategori,nama,id_kelompok', 'supplier:id_supplier,nama'])
             ->orderByDesc('id_barang')->limit($limit);
         if ($sid = $this->schoolId($request)) {
@@ -68,6 +72,10 @@ class PageController extends Controller
             'detailPenjualan' => TbDetailPenjualan::whereIn('id_penjualan', $detailJualIds)->get(),
             'detailPembelian' => TbDetailPembelian::whereIn('id_pembelian', $detailBeliIds)->get(),
             'supplier' => $this->suppliers($request),
+            'pelanggan' => $this->pelangganList($request),
+            'kelompokPelanggan' => $this->kelompokPelanggan($request),
+            'sekolah' => $this->sekolahList($request),
+            'users' => $this->userList($request),
         ]);
     }
 
@@ -75,9 +83,12 @@ class PageController extends Controller
     {
         return Inertia::render('Transaksi', [
             'title' => 'Transaksi',
-            'subtitle' => 'Kasir penjualan (tb_penjualan + detail)',
+            'subtitle' => 'Kasir penjualan',
             'barang' => $this->barang($request),
             'pelanggan' => $this->pelangganList($request),
+            'kategori' => $this->kategori($request),
+            'kelompokPelanggan' => $this->kelompokPelanggan($request),
+            'sekolah' => $this->sekolahList($request),
         ]);
     }
 
@@ -98,6 +109,7 @@ class PageController extends Controller
             'penjualan' => $penjualan,
             'detailPenjualan' => TbDetailPenjualan::whereIn('id_penjualan', $ids)->get(),
             'barang' => $this->barang($request),
+            'sekolah' => $this->sekolahList($request),
         ]);
     }
 
@@ -113,7 +125,7 @@ class PageController extends Controller
 
         return Inertia::render('Pembelian', [
             'title' => 'Pembelian',
-            'subtitle' => 'Stok masuk dari supplier (tb_pembelian + detail)',
+            'subtitle' => 'Stok masuk dari supplier',
             'pembelian' => $pembelian,
             'detailPembelian' => TbDetailPembelian::whereIn('id_pembelian', $ids)->get(),
             'supplier' => $this->suppliers($request),
@@ -125,10 +137,12 @@ class PageController extends Controller
     {
         return Inertia::render('Produk', [
             'title' => 'Produk',
-            'subtitle' => 'Master barang, kategori & stok (tb_barang)',
+            'subtitle' => 'Master barang, kategori & stok',
             'barang' => $this->barang($request),
             'kategori' => $this->kategori($request),
+            'kelompok' => $this->kelompokKategori($request),
             'supplier' => $this->suppliers($request),
+            'sekolah' => $this->sekolahList($request),
         ]);
     }
 
@@ -136,8 +150,9 @@ class PageController extends Controller
     {
         return Inertia::render('Pelanggan', [
             'title' => 'Pelanggan',
-            'subtitle' => 'Master pelanggan koperasi (tb_pelanggan)',
+            'subtitle' => 'Master pelanggan',
             'pelanggan' => $this->pelangganList($request),
+            'kelompokPelanggan' => $this->kelompokPelanggan($request),
         ]);
     }
 
@@ -145,8 +160,10 @@ class PageController extends Controller
     {
         return Inertia::render('Supplier', [
             'title' => 'Supplier',
-            'subtitle' => 'Rekanan pemasok barang (tb_supplier)',
+            'subtitle' => 'Rekanan pemasok barang',
             'supplier' => $this->suppliers($request),
+            'barang' => $this->barang($request),
+            'pembelian' => $this->recentPembelian($request),
         ]);
     }
 
@@ -154,6 +171,7 @@ class PageController extends Controller
     {
         $actor = $request->user();
         $q = TbUser::with(['role:id_role,nama_role', 'sekolah:id_sekolah,nama_sekolah,kode_sekolah'])
+            ->whereNull('deleted_at')
             ->orderByDesc('id_user');
         if (! Tenant::isSuperAdmin($actor)) {
             $q->where('id_sekolah', $actor->id_sekolah);
@@ -169,7 +187,7 @@ class PageController extends Controller
 
         return Inertia::render('User', [
             'title' => 'User',
-            'subtitle' => 'Kelola akun & role (tb_user + roles)',
+            'subtitle' => 'Kelola akun & hak akses',
             'users' => $q->get()->makeHidden(['password']),
             'roles' => Role::orderBy('id_role')->get(),
             'sekolah' => $this->sekolahList($request),
@@ -180,7 +198,7 @@ class PageController extends Controller
     {
         return Inertia::render('Sekolah', [
             'title' => 'Sekolah',
-            'subtitle' => 'Profil sekolah (tb_sekolah)',
+            'subtitle' => 'Profil & langganan sekolah',
             'sekolah' => $this->sekolahList($request),
         ]);
     }
@@ -205,6 +223,7 @@ class PageController extends Controller
             'detailPenjualan' => TbDetailPenjualan::whereIn('id_penjualan', $penjualan->pluck('id_penjualan'))->get(),
             'detailPembelian' => TbDetailPembelian::whereIn('id_pembelian', $pembelian->pluck('id_pembelian'))->get(),
             'barang' => $this->barang($request),
+            'pelanggan' => $this->pelangganList($request),
         ]);
     }
 
@@ -225,6 +244,20 @@ class PageController extends Controller
             'title' => 'Settings',
             'subtitle' => 'Profil, sekolah & tampilan',
         ]);
+    }
+
+    /** Semua user dalam scope aktor (tanpa batas role) untuk dashboard. */
+    protected function userList(Request $request)
+    {
+        $actor = $request->user();
+        $q = TbUser::with(['role:id_role,nama_role', 'sekolah:id_sekolah,nama_sekolah,kode_sekolah'])
+            ->whereNull('deleted_at')
+            ->orderByDesc('id_user');
+        if (! Tenant::isSuperAdmin($actor)) {
+            $q->where('id_sekolah', $actor->id_sekolah);
+        }
+
+        return $q->get()->makeHidden(['password']);
     }
 
     // ---------- helpers ----------

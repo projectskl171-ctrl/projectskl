@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SekolahRequest;
+use App\Models\TbNotifikasi;
 use App\Models\TbSekolah;
 use App\Support\Tenant;
 use Illuminate\Http\JsonResponse;
@@ -40,7 +41,7 @@ class SekolahController extends Controller
 
     public function store(SekolahRequest $request): JsonResponse
     {
-        $sekolah = TbSekolah::create($request->validated() + ['created_at' => now()]);
+        $sekolah = TbSekolah::create($request->validated() + ['created_at' => now(), 'activated_at' => now()]);
 
         return response()->json(['message' => 'Sekolah berhasil ditambahkan.', 'data' => $sekolah], 201);
     }
@@ -66,7 +67,16 @@ class SekolahController extends Controller
         }
 
         $baru = $sekolah->is_active ? 0 : 1;
-        $sekolah->update(['is_active' => $baru]);
+        // Timer 30 hari super admin dimulai ulang tiap sekolah diaktifkan.
+        $patch = ['is_active' => $baru];
+        if ($baru === 1) {
+            $patch['activated_at'] = now();
+            TbNotifikasi::where('ref_type', 'sekolah')
+                ->where('ref_id', $sekolah->id_sekolah)
+                ->where('is_read', 0)
+                ->update(['is_read' => 1, 'read_at' => now()]);
+        }
+        $sekolah->update($patch);
 
         // Cascade ke akun: nonaktif => semua user ikut mati;
         // aktif => semua user yang belum dihapus ikut hidup lagi.
@@ -77,6 +87,39 @@ class SekolahController extends Controller
                 ? 'Sekolah diaktifkan. Akun kasir & admin di dalamnya ikut aktif.'
                 : 'Sekolah dinonaktifkan. Akun kasir & admin di dalamnya ikut nonaktif.',
             'data' => $sekolah->fresh(),
+        ]);
+    }
+
+    /** Perpanjang langganan 30 hari.
+     *  - Sekolah masih aktif (belum jatuh tempo): periode baru dimulai
+     *    SETELAH masa berjalan habis (activated_at lama + 30 hari).
+     *  - Sudah lewat tempo / belum pernah aktif: dimulai dari sekarang.
+     *  Notif timer lama yang belum dibaca ikut ditandai selesai agar
+     *  keterangan merah tidak nempel terus. */
+    public function perpanjang(int $id): JsonResponse
+    {
+        $sekolah = TbSekolah::findOrFail($id);
+        $awal = $sekolah->activated_at ?? $sekolah->created_at;
+        $mulai = now();
+        if ($awal) {
+            $expiry = \Carbon\Carbon::parse($awal)->addDays(30);
+            if ($expiry->isFuture()) {
+                $mulai = $expiry;
+            }
+        }
+        $sekolah->update(['activated_at' => $mulai, 'is_active' => 1]);
+        $sekolah->users()->whereNull('deleted_at')->update(['is_active' => 1]);
+
+        TbNotifikasi::where('ref_type', 'sekolah')
+            ->where('ref_id', $sekolah->id_sekolah)
+            ->where('is_read', 0)
+            ->update(['is_read' => 1, 'read_at' => now()]);
+
+        $segar = $sekolah->fresh();
+
+        return response()->json([
+            'message' => "Langganan {$sekolah->nama_sekolah} diperpanjang. Berlaku hingga ".$mulai->copy()->addDays(30)->format('d M Y').'.',
+            'data' => $segar,
         ]);
     }
 

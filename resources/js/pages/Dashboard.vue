@@ -26,7 +26,7 @@
                 </Link>
                 <Link href="/pelanggan" class="group flex items-center gap-4 rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 transition-all hover:bg-emerald-600/5 dark:hover:bg-white/[0.04]">
                     <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-pink-500/15 text-xl">👥</div>
-                    <div><p class="font-black">Data Pelanggan</p><p class="text-xs text-slate-500 dark:text-white/40">Kelola pelanggan daganganmu (tambah / edit / hapus)</p></div>
+                    <div><p class="font-black">Data Pelanggan</p><p class="text-xs text-slate-500 dark:text-white/40">Kelola pelanggan daganganmu</p></div>
                 </Link>
             </div>
             <div class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5">
@@ -96,10 +96,10 @@
             </div>
 
             <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
-                <div class="xl:col-span-2">
+                <div v-if="auth.role.value !== 'super admin'" class="xl:col-span-2">
                     <OmzetChart :data="omzetScope7" subtitle="total faktur per hari" />
                 </div>
-                <div class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5">
+                <div class="rounded-xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5" :class="auth.role.value === 'super admin' && 'xl:col-span-3'">
                     <div class="flex items-center justify-between">
                         <h2 class="text-sm font-bold tracking-tight">Penjualan Terbaru</h2>
                         <Link v-if="auth.can('/riwayat-transaksi')" href="/riwayat-transaksi" class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:text-emerald-300">Riwayat →</Link>
@@ -129,7 +129,7 @@
                 <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                     <div v-for="u in panelUsersPaged" :key="u.id_user" class="flex items-center gap-2.5 rounded-lg border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-black/30 px-3 py-2.5 text-xs">
                         <div class="flex h-8 w-8 items-center justify-center rounded-md bg-slate-900/[0.06] dark:bg-white/10 text-[11px] font-black">{{ u.nama_lengkap.slice(0, 1) }}</div>
-                        <div class="min-w-0 flex-1"><p class="truncate font-bold">{{ u.nama_lengkap }}</p><p class="text-[10px] text-slate-500 dark:text-white/40">@{{ u.username }} • {{ store.namaSekolah(u.id_sekolah) }}</p></div>
+                        <div class="min-w-0 flex-1"><p class="truncate font-bold">{{ u.nama_lengkap }}</p><p class="text-[10px] text-slate-500 dark:text-white/40">@{{ u.username }}{{ u.id_sekolah ? ` • ${store.namaSekolah(u.id_sekolah)}` : '' }}</p></div>
                         <span class="rounded px-1.5 py-0.5 text-[10px] font-black" :class="u.id_role === 1 ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300' : u.id_role === 2 ? 'bg-violet-500/15 text-violet-700 dark:text-violet-300' : 'bg-blue-500/15 text-blue-700 dark:text-blue-300'">{{ store.namaRole(u.id_role) }}</span>
                     </div>
                 </div>
@@ -150,21 +150,22 @@ import { ROLE_COLOR, ROLE_SCOPE, useAuthMock } from '@/composables/useAuthMock';
 import { dayKey, formatDateTime, formatRupiah, formatRupiahShort, todayKey } from '@/lib/format';
 
 defineOptions({ layout: DashboardLayout });
-const props = defineProps({ penjualan: Array, barang: Array, pelanggan: Array });
+const props = defineProps({ penjualan: Array, barang: Array, pelanggan: Array, users: Array, sekolah: Array, kelompokPelanggan: Array, pembelian: Array, detailPenjualan: Array, detailPembelian: Array, supplier: Array });
 onMounted(() => hydrate(props));
 
 const store = usePosStore();
 const auth = useAuthMock();
 const { namaPelanggan } = store;
 
-/* Scope sekolah: kasir & admin terkunci di sekolah akunnya (bukan hardcode),
-   super admin selalu gabungan semua sekolah. */
-const mySchoolId = computed(() => {
-    const me = store.usersAktif.value.find((u) => u.id_user === (auth.user.value?.id_user ?? -1));
-    if (me) return me.id_sekolah;
-    return auth.role.value === 'super admin' ? 0 : 1;
+/* Scope sekolah dari SESSION login (admin/kasir terkunci sekolahnya,
+   super admin gabungan semua). Jangan tebak dari store.users. */
+const scopeId = computed(() => {
+    if (auth.role.value === 'super admin') return 0;
+    if (auth.user.value?.id_sekolah != null) return Number(auth.user.value.id_sekolah);
+    const me = store.usersAktif.value.find((u) => Number(u.id_user) === Number(auth.user.value?.id_user ?? -1));
+    if (me?.id_sekolah != null) return Number(me.id_sekolah);
+    return 1;
 });
-const scopeId = computed(() => (auth.role.value === 'super admin' ? 0 : (mySchoolId.value || 1)));
 const inScope = (row) => !scopeId.value || (row.id_sekolah ?? 1) === scopeId.value;
 
 const jualScope = computed(() => store.penjualanAktif.value.filter(inScope));

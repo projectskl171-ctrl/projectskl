@@ -3,38 +3,19 @@
     <aside
         class="sticky top-0 z-30 flex h-dvh flex-col border-r border-slate-200 bg-white text-slate-900 dark:border-white/[0.06] dark:bg-[#0d0d0d] dark:text-white"
     >
-        <!-- BRAND -->
+        <!-- BRAND : NIXA Is X-platform Accounting -->
         <div class="flex h-16 shrink-0 items-center gap-3 border-b border-slate-200 px-5 dark:border-white/[0.06]">
-            <div
-                class="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500 text-white shadow-[0_0_0_1px_rgba(16,185,129,0.2),0_4px_12px_-2px_rgba(16,185,129,0.4)]"
-            >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                    <path d="M3 3h2l.4 2M7 13h10l4-8H5.4" />
-                    <circle cx="9" cy="20" r="1.5" />
-                    <circle cx="17" cy="20" r="1.5" />
-                </svg>
-            </div>
+            <NixaLogo cls="h-9 w-9 drop-shadow-[0_4px_12px_rgba(16,185,129,0.45)]" />
             <div class="min-w-0">
-                <p class="truncate text-[13px] font-bold tracking-tight leading-none">KasirKu</p>
-                <p class="mt-1 truncate text-[10px] font-medium tracking-[0.14em] text-slate-400 uppercase leading-none dark:text-white/40">
-                    POS System
+                <p class="truncate text-[15px] font-black tracking-tight leading-none">NIXA</p>
+                <p class="mt-1 truncate text-[9px] font-medium tracking-[0.14em] text-slate-400 uppercase leading-none dark:text-white/40">
+                    X-platform Accounting
                 </p>
             </div>
         </div>
 
         <!-- NAV : relative = offsetParent buat sliding indicator -->
         <nav ref="navRef" class="relative flex-1 overflow-y-auto py-4">
-            <!-- Badge peran aktif -->
-            <div class="mx-5 mb-3 flex items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 dark:border-white/[0.06] dark:bg-white/[0.02]">
-                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[11px] font-black text-white"
-                    :style="{ background: ROLE_COLOR[auth.role.value] }">
-                    {{ auth.user.value?.inisial ?? '?' }}
-                </div>
-                <div class="min-w-0 flex-1 leading-tight">
-                    <p class="truncate text-[11px] font-bold">{{ auth.user.value?.nama_lengkap ?? 'Tamu' }}</p>
-                    <p class="text-[10px] font-bold" :style="{ color: ROLE_COLOR[auth.role.value] }">{{ auth.roleLabel.value }}</p>
-                </div>
-            </div>
             <template v-for="group in visibleGroups" :key="group.label">
                 <p class="mt-1 mb-2 px-5 text-[10px] font-bold tracking-[0.14em] text-slate-400 uppercase dark:text-white/30">
                     {{ group.label }}
@@ -123,47 +104,99 @@
             />
         </nav>
 
-        <!-- FOOTER ACTIONS -->
+        <!-- FOOTER ACTIONS : Settings / Beralih Akun / Logout (semua role) -->
         <div class="shrink-0 space-y-0 border-t border-slate-200 py-3 dark:border-white/[0.06]">
-            <Link
-                v-for="item in visibleFooter"
-                :key="item.href"
-                :href="item.href"
-                @click="item.action ? item.action($event) : null"
-                class="group relative flex h-9 w-full items-center gap-3 overflow-hidden px-5 text-[13px] font-medium text-slate-500 transition-colors duration-150 ease-in hover:text-slate-900 dark:text-white/55 dark:hover:text-white"
-            >
-                <span
-                    class="pointer-events-none absolute inset-0 origin-left scale-x-0 overflow-hidden transition-transform duration-300 ease-in group-hover:scale-x-100"
-                    :style="{
-                        background: `linear-gradient(90deg, ${hexA(item.color, 0.16)}, ${hexA(item.color, 0.04)})`,
-                    }"
-                    aria-hidden="true"
-                />
-                <component
-                    :is="item.icon"
-                    class="relative z-10 h-[17px] w-[17px] shrink-0 transition-colors duration-150 ease-in group-hover:text-[color:var(--c)]"
-                    :style="{ '--c': item.color }"
-                />
-                <span class="relative z-10 flex-1 truncate">{{ item.label }}</span>
-            </Link>
+            <template v-for="item in visibleFooter" :key="item.key">
+                <Link
+                    v-if="item.href"
+                    :href="item.href"
+                    class="group relative flex h-9 w-full items-center gap-3 overflow-hidden px-5 text-[13px] font-medium text-slate-500 transition-colors duration-150 ease-in hover:text-slate-900 dark:text-white/55 dark:hover:text-white"
+                >
+                    <span
+                        class="pointer-events-none absolute inset-0 origin-left scale-x-0 overflow-hidden transition-transform duration-300 ease-in group-hover:scale-x-100"
+                        :style="{
+                            background: `linear-gradient(90deg, ${hexA(item.color, 0.16)}, ${hexA(item.color, 0.04)})`,
+                        }"
+                        aria-hidden="true"
+                    />
+                    <component
+                        :is="item.icon"
+                        class="relative z-10 h-[17px] w-[17px] shrink-0 transition-colors duration-150 ease-in group-hover:text-[color:var(--c)]"
+                        :style="{ '--c': item.color }"
+                    />
+                    <span class="relative z-10 flex-1 truncate">{{ item.label }}</span>
+                </Link>
+                <button
+                    v-else
+                    type="button"
+                    @click="item.action === 'switch' ? (showSwitch = true) : (showLogout = true)"
+                    class="group relative flex h-9 w-full cursor-pointer items-center gap-3 overflow-hidden px-5 text-left text-[13px] font-medium text-slate-500 transition-colors duration-150 ease-in hover:text-slate-900 dark:text-white/55 dark:hover:text-white"
+                >
+                    <span
+                        class="pointer-events-none absolute inset-0 origin-left scale-x-0 overflow-hidden transition-transform duration-300 ease-in group-hover:scale-x-100"
+                        :style="{
+                            background: `linear-gradient(90deg, ${hexA(item.color, 0.16)}, ${hexA(item.color, 0.04)})`,
+                        }"
+                        aria-hidden="true"
+                    />
+                    <component
+                        :is="item.icon"
+                        class="relative z-10 h-[17px] w-[17px] shrink-0 transition-colors duration-150 ease-in group-hover:text-[color:var(--c)]"
+                        :style="{ '--c': item.color }"
+                    />
+                    <span class="relative z-10 flex-1 truncate">{{ item.label }}</span>
+                </button>
+            </template>
         </div>
+
+        <!-- MODAL LOGOUT & BERALIH AKUN ala ChatGPT (tutup hanya via tombol) -->
+        <AccountModal :show="showLogout" mode="logout" :current="currentAccount" :others="otherAccountsList" :loading="logoutLoading" @close="showLogout = false" @logout="doLogout" @switch="switchTo" />
+        <AccountModal :show="showSwitch" mode="switch" :current="currentAccount" :others="otherAccountsList" @close="showSwitch = false" @switch="switchTo" />
     </aside>
 </template>
 
 <script setup>
 import { computed, defineComponent, h, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { ROLE_COLOR, logoutMock, useAuthMock } from '@/composables/useAuthMock';
+import { logoutMock, useAuthMock } from '@/composables/useAuthMock';
+import { useAccounts } from '@/composables/useAccounts';
+import AccountModal from '@/components/AccountModal.vue';
+import NixaLogo from '@/components/NixaLogo.vue';
 import { apiLogout } from '@/lib/api';
 
 const auth = useAuthMock();
-const keluar = (e) => {
-    e.preventDefault();
+const { list: accountList } = useAccounts();
+const showLogout = ref(false);
+const showSwitch = ref(false);
+const logoutLoading = ref(false);
+const currentAccount = computed(() => auth.user.value ? {
+    id_user: auth.user.value.id_user,
+    username: auth.user.value.username,
+    nama_lengkap: auth.user.value.nama_lengkap,
+    role: auth.user.value.role,
+    inisial: auth.user.value.inisial,
+} : null);
+const otherAccountsList = computed(() =>
+    accountList.value.filter((a) => Number(a.id_user) !== Number(auth.user.value?.id_user)).slice(0, 2),
+);
+function doLogout() {
+    logoutLoading.value = true;
     apiLogout().catch(() => {}).finally(() => {
         logoutMock();
+        logoutLoading.value = false;
+        showLogout.value = false;
         router.visit('/');
     });
-};
+}
+/* Beralih akun: keluar sesi ini lalu ke AuthPage dengan username terisi. */
+function switchTo(a) {
+    showSwitch.value = false;
+    showLogout.value = false;
+    apiLogout().catch(() => {}).finally(() => {
+        logoutMock();
+        router.visit(`/?username=${encodeURIComponent(a.username)}`);
+    });
+}
 
 /* =========================================================
    PARTICLE CANVAS — random movement (velocity acak, bounce, twinkle)
@@ -362,6 +395,12 @@ const IconReceipt = makeIcon([
     'M9 8h6',
     'M9 12h6',
 ]);
+const IconSwitch = makeIcon([
+    'M17 1l4 4-4 4',
+    'M3 11V9a4 4 0 014-4h14',
+    'M7 23l-4-4 4-4',
+    'M21 13v2a4 4 0 01-4 4H3',
+]);
 
 /* =========================================================
    NAV CONFIG — `roles` = peran yang boleh LIHAT menu ini.
@@ -405,15 +444,15 @@ const visibleGroups = computed(() =>
         .filter((g) => g.items.length),
 );
 
+/* Settings / Beralih Akun / Logout — tampil untuk semua role, Beralih Akun
+   tepat di bawah Settings. */
 const footerItems = [
-    { label: 'Settings', href: '/settings', color: '#94a3b8', icon: IconSettings, roles: ['kasir', 'admin', 'super admin'] },
-    { label: 'Logout', href: '/', color: '#ef4444', icon: IconLogout, action: keluar, roles: ['kasir', 'admin', 'super admin'] },
+    { key: 'settings', label: 'Settings', href: '/settings', color: '#94a3b8', icon: IconSettings },
+    { key: 'switch', label: 'Beralih Akun', color: '#38bdf8', icon: IconSwitch, action: 'switch' },
+    { key: 'logout', label: 'Logout', color: '#ef4444', icon: IconLogout, action: 'logout' },
 ];
 
-/* Footer difilter peran juga (semua peran dapat Settings) */
-const visibleFooter = computed(() =>
-    footerItems.filter((i) => !i.roles || auth.can(i.href) || i.href === '/'),
-);
+const visibleFooter = computed(() => footerItems);
 
 /* =========================================================
    ACTIVE STATE

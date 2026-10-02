@@ -7,7 +7,7 @@
                 <div class="flex h-12 w-12 items-center justify-center rounded-xl text-sm font-black text-white" :style="{ background: ROLE_COLOR[auth.role.value] }">{{ auth.user.value?.inisial }}</div>
                 <div>
                     <p class="text-sm font-black">{{ auth.user.value?.nama_lengkap }}</p>
-                    <p class="text-[11px] text-slate-500 dark:text-white/40">@{{ auth.user.value?.username }} • {{ auth.roleLabel.value }} • {{ auth.role.value === 'super admin' ? 'Semua sekolah' : store.namaSekolah(mySchoolId) }}</p>
+                    <p class="text-[11px] text-slate-500 dark:text-white/40">@{{ auth.user.value?.username }} • {{ auth.roleLabel.value }}{{ auth.user.value?.id_sekolah ? ` • ${store.namaSekolah(mySchoolId)}` : '' }}</p>
                 </div>
             </div>
 
@@ -89,7 +89,7 @@
     </div>
 
     <!-- ===== POPUP GANTI PASSWORD ===== -->
-    <div v-if="showPass" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" @click.self="tutupPopupPass">
+    <div v-if="showPass" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
         <div class="w-full max-w-sm rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#111] p-5">
             <!-- Langkah 1 : password lama -->
             <template v-if="passStep === 1">
@@ -147,8 +147,10 @@ const bisaAturProfil = computed(() => auth.role.value === 'admin' || auth.role.v
 
 const myId = computed(() => auth.user.value?.id_user ?? 0);
 const mySchoolId = computed(() => {
-    const me = store.usersAktif.value.find((u) => u.id_user === myId.value);
-    return me?.id_sekolah ?? (auth.role.value === 'super admin' ? 0 : 1);
+    if (auth.user.value?.id_sekolah != null) return Number(auth.user.value.id_sekolah);
+    const me = store.usersAktif.value.find((u) => Number(u.id_user) === Number(myId.value));
+    if (me?.id_sekolah != null) return Number(me.id_sekolah);
+    return auth.role.value === 'super admin' ? 0 : 1;
 });
 
 const nama = ref(auth.user.value?.nama_lengkap ?? '');
@@ -187,8 +189,13 @@ async function muatProfil() {
             username.value = d.username ?? username.value;
             sisaNama.value = Number(d.nama_lengkap_cooldown_sisa_hari ?? 0);
             sisaUsername.value = Number(d.username_cooldown_sisa_hari ?? 0);
+            // Sinkron header/sidebar dengan nama DB asli (bukan mock basi).
+            try { updateMockProfile(nama.value, username.value); } catch { /* abaikan */ }
         }
-    } catch { /* mode lokal : pakai mock */ }
+    } catch (e) {
+        // mode lokal : pakai mock; tampilkan pesan hanya bila bukan 403 kasir
+        if (e?.status && e.status !== 403) msg.value = '';
+    }
 }
 
 function mulaiEdit(key, current) {
@@ -220,6 +227,7 @@ async function simpanNama() {
         simpanMock({ nama_lengkap: val, nama_lengkap_changed_at: new Date().toISOString() });
         batalEdit();
         notifOk('Nama lengkap berhasil diganti.');
+        muatProfil();
     } catch (e) {
         notifGagal(e?.errors?.nama_lengkap?.[0] || e?.message || 'Gagal menyimpan nama.');
     }
@@ -227,13 +235,15 @@ async function simpanNama() {
 async function simpanUsername() {
     const val = draft.value.trim();
     if (!val) { notifGagal('Username tidak boleh kosong.'); return; }
-    const duplikat = store.usersAktif.value.some((u) => u.id_user !== myId.value && u.username.toLowerCase() === val.toLowerCase());
+    if (val.length < 3) { notifGagal('Username minimal 3 karakter.'); return; }
+    const duplikat = store.usersAktif.value.some((u) => u.id_user !== myId.value && (u.username || '').toLowerCase() === val.toLowerCase());
     if (duplikat) { notifGagal(`Username "${val}" sudah dipakai user lain.`); return; }
     try {
         await apiFetch('/api/settings/profile', { method: 'PUT', body: JSON.stringify({ username: val }) });
         simpanMock({ username: val, username_changed_at: new Date().toISOString() });
         batalEdit();
         notifOk('Username berhasil diganti.');
+        muatProfil();
     } catch (e) {
         notifGagal(e?.errors?.username?.[0] || e?.message || 'Gagal menyimpan username.');
     }
@@ -261,16 +271,13 @@ async function cekPassLama() {
         await apiFetch('/api/settings/password/check', { method: 'POST', body: JSON.stringify({ password_lama: passLama.value }) });
         passStep.value = 2;
     } catch (e) {
-        if (e?.status === 404 || e?.status === 500 || e?.message?.includes('Failed to fetch')) {
-            passStep.value = 2; // mode lokal : lanjut tanpa verifikasi server
-        } else {
-            passErr.value = e?.message || 'Password lama salah.';
-        }
+        passErr.value = e?.message || 'Password lama salah.';
     }
 }
 async function simpanPassBaru() {
     passErr.value = ''; passOk.value = '';
     if (!passBaru.value) { passErr.value = 'Password baru tidak boleh kosong.'; return; }
+    if (passBaru.value.length < 3) { passErr.value = 'Password baru minimal 3 karakter.'; return; }
     if (passBaru.value !== passBaru2.value) { passErr.value = 'Konfirmasi password baru tidak sama.'; return; }
     try {
         await apiFetch('/api/settings/password', {
@@ -280,12 +287,7 @@ async function simpanPassBaru() {
         passOk.value = 'Password berhasil diganti.';
         setTimeout(tutupPopupPass, 900);
     } catch (e) {
-        if (e?.status === 404 || e?.status === 500 || e?.message?.includes('Failed to fetch')) {
-            passOk.value = 'Password diganti (mode lokal).';
-            setTimeout(tutupPopupPass, 900);
-        } else {
-            passErr.value = e?.errors?.password_baru?.[0] || e?.message || 'Gagal mengganti password.';
-        }
+        passErr.value = e?.errors?.password_baru?.[0] || e?.message || 'Gagal mengganti password.';
     }
 }
 </script>
